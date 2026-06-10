@@ -36,8 +36,9 @@ Thumbs.db
 .vscode/
 .idea/
 
-# ── Training logs (can be large) ──────────────────────────────────────────────
-outputs/logs/
+# ── Training logs (large files excluded, but eval_results.json kept) ──────────
+outputs/logs/*.log
+outputs/logs/train_log_*.txt
 
 # ── Temporary files ───────────────────────────────────────────────────────────
 *.tmp
