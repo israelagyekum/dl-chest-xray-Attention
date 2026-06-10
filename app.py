@@ -250,11 +250,17 @@ with col_upload:
 with col_sample:
     sample_files = []
     if os.path.exists(SAMPLE_DIR):
-        sample_files = [f for f in os.listdir(SAMPLE_DIR)
-                        if f.lower().endswith((".png", ".jpg"))]
+        sample_files = [
+            f for f in sorted(os.listdir(SAMPLE_DIR))
+            if f.lower().endswith((".png", ".jpg", ".jpeg"))
+            and os.path.getsize(os.path.join(SAMPLE_DIR, f)) > 0
+        ]
+    # Default to first sample so XAI section is visible on page load
+    default_idx = 1 if sample_files else 0
     sample_choice = st.selectbox(
         "…or pick a sample image",
         ["(none)"] + sample_files,
+        index=default_idx,
     )
 
 pil_img  = None
