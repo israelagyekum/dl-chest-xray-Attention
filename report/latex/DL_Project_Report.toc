@@ -1,0 +1,43 @@
+\contentsline {section}{Abstract}{1}{Doc-Start}%
+\contentsline {section}{\numberline {1}Introduction}{3}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Research Questions}{3}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Contributions}{4}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Related Work}{4}{section.2}%
+\contentsline {subsection}{\numberline {2.1}CNN Backbones for Medical Imaging}{4}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Multi-Label Classification on ChestX-ray14}{4}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Attention Mechanisms}{5}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Post-Hoc Explanation Methods}{5}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Right-for-the-Right-Reasons Training}{5}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.6}Label Dependency Modelling}{6}{subsection.2.6}%
+\contentsline {section}{\numberline {3}Methodology}{6}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Dataset}{6}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Model Architecture}{7}{subsection.3.2}%
+\contentsline {subsubsection}{\numberline {3.2.1}CNN Backbone}{8}{subsubsection.3.2.1}%
+\contentsline {subsubsection}{\numberline {3.2.2}Channel Attention (Optional)}{8}{subsubsection.3.2.2}%
+\contentsline {subsubsection}{\numberline {3.2.3}Supervised Spatial Attention Module}{8}{subsubsection.3.2.3}%
+\contentsline {subsubsection}{\numberline {3.2.4}Classifier Head}{8}{subsubsection.3.2.4}%
+\contentsline {subsection}{\numberline {3.3}Loss Function}{8}{subsection.3.3}%
+\contentsline {subsubsection}{\numberline {3.3.1}Classification Loss ($\mathcal {L}_{\text {cls}}$)}{9}{subsubsection.3.3.1}%
+\contentsline {subsubsection}{\numberline {3.3.2}Attention Loss ($\mathcal {L}_{\text {attn}}$)}{9}{subsubsection.3.3.2}%
+\contentsline {subsubsection}{\numberline {3.3.3}Label-Correlation Loss ($\mathcal {L}_{\text {corr}}$)}{9}{subsubsection.3.3.3}%
+\contentsline {subsection}{\numberline {3.4}Training Protocol}{10}{subsection.3.4}%
+\contentsline {section}{\numberline {4}Experimental Setup}{10}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Model Configurations}{10}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Evaluation Metrics}{11}{subsection.4.2}%
+\contentsline {subsubsection}{\numberline {4.2.1}Classification}{11}{subsubsection.4.2.1}%
+\contentsline {subsubsection}{\numberline {4.2.2}Localisation}{11}{subsubsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.3}Compute}{11}{subsection.4.3}%
+\contentsline {section}{\numberline {5}Results}{12}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Classification Performance}{12}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Localisation Performance}{12}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Ablation Study}{13}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Training Curves and Qualitative Results}{14}{subsection.5.4}%
+\contentsline {section}{\numberline {6}Discussion}{18}{section.6}%
+\contentsline {subsection}{\numberline {6.1}Classification vs Localisation Trade-off}{18}{subsection.6.1}%
+\contentsline {subsection}{\numberline {6.2}Localisation Faithfulness}{18}{subsection.6.2}%
+\contentsline {subsection}{\numberline {6.3}Ablation Insights}{18}{subsection.6.3}%
+\contentsline {subsection}{\numberline {6.4}Backbone Comparison}{19}{subsection.6.4}%
+\contentsline {subsection}{\numberline {6.5}Limitations}{19}{subsection.6.5}%
+\contentsline {section}{\numberline {7}Conclusion}{19}{section.7}%
+\contentsline {subsection}{\numberline {7.1}Future Work}{20}{subsection.7.1}%
+\contentsline {section}{\numberline {A}Full Per-Class ROC-AUC}{22}{appendix.A}%

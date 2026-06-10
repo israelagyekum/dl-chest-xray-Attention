@@ -1,0 +1,96 @@
+\begin{thebibliography}{12}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Chefer et~al.(2021)Chefer, Gur, and Wolf]{chefer2021}
+H.~Chefer, S.~Gur, and L.~Wolf.
+\newblock Transformer interpretability beyond attention visualization.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}, pages 782--791, 2021.
+
+\bibitem[Hasan and Bhatt(2024)]{hydravit2024}
+M.~M. Hasan and U.~Bhatt.
+\newblock {HydraViT}: Adaptive multi-branch transformer for multi-label disease
+  classification from chest {X}-ray images.
+\newblock \emph{Biomedical Signal Processing and Control}, 97:\penalty0 106700,
+  2024.
+
+\bibitem[Holste et~al.(2022)Holste, Wang, Jiang, Shen, Shih, Summers, Peng, and
+  Wang]{holste2022}
+G.~Holste, S.~Wang, Z.~Jiang, T.~C. Shen, G.~Shih, R.~M. Summers, Y.~Peng, and
+  Z.~Wang.
+\newblock Long-tailed classification of thorax diseases on chest {X}-ray: A new
+  benchmark study.
+\newblock In \emph{ECCV Workshop on Distributed, Collaborative and Federated
+  Learning, and Affordable AI and Healthcare (DALI)}, pages 22--38, 2022.
+
+\bibitem[Khader et~al.(2025)Khader, Mueller-Franzes, Arasteh, Han, Haarburger,
+  Schulze-Hagen, Schad, Engelhardt, Nebelung, Kather, and Truhn]{clarity2025}
+F.~Khader, G.~Mueller-Franzes, S.~T. Arasteh, T.~Han, C.~Haarburger,
+  M.~Schulze-Hagen, P.~Schad, S.~Engelhardt, S.~Nebelung, J.~N. Kather, and
+  D.~Truhn.
+\newblock {CLARiTy}: A vision transformer for multi-label classification and
+  weakly-supervised localisation of chest {X}-ray pathologies.
+\newblock \emph{arXiv preprint arXiv:2512.16700}, 2025.
+
+\bibitem[Lanfredi et~al.(2023)Lanfredi, Schroeder, and Tasdizen]{lanfredi2023}
+R.~B. Lanfredi, J.~D. Schroeder, and T.~Tasdizen.
+\newblock Localization supervision of chest {X}-ray classifiers using
+  label-specific eye-tracking annotation.
+\newblock \emph{Frontiers in Radiology}, 3:\penalty0 1088068, 2023.
+
+\bibitem[Liu et~al.(2021)Liu, Lin, Cao, Hu, Wei, Zhang, Lin, and Guo]{swin2021}
+Z.~Liu, Y.~Lin, Y.~Cao, H.~Hu, Y.~Wei, Z.~Zhang, S.~Lin, and B.~Guo.
+\newblock Swin {Transformer}: Hierarchical vision transformer using shifted
+  windows.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision (ICCV)}, pages 9992--10002, 2021.
+
+\bibitem[Liu et~al.(2022)Liu, Mao, Wu, Feichtenhofer, Darrell, and
+  Xie]{convnext2022}
+Z.~Liu, H.~Mao, C.-Y. Wu, C.~Feichtenhofer, T.~Darrell, and S.~Xie.
+\newblock A {ConvNet} for the 2020s.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}, pages 11966--11976, 2022.
+
+\bibitem[Rao et~al.(2023)Rao, B{\"o}hle, Parchami-Araghi, and Schiele]{rao2023}
+S.~Rao, M.~B{\"o}hle, A.~Parchami-Araghi, and B.~Schiele.
+\newblock Studying how to efficiently and effectively guide models with
+  explanations.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision (ICCV)}, 2023.
+
+\bibitem[Ridnik et~al.(2021)Ridnik, Ben-Baruch, Zamir, Noy, Friedman, Protter,
+  and Zelnik-Manor]{asl2021}
+T.~Ridnik, E.~Ben-Baruch, N.~Zamir, A.~Noy, I.~Friedman, M.~Protter, and
+  L.~Zelnik-Manor.
+\newblock Asymmetric loss for multi-label classification.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision (ICCV)}, pages 82--91, 2021.
+
+\bibitem[Sun et~al.(2023)Sun, Woerner, Maier, Koch, and
+  Wachinger]{attrinet2023}
+S.~Sun, S.~Woerner, A.~Maier, L.~M. Koch, and C.~Wachinger.
+\newblock Inherently interpretable multi-label classification using
+  class-specific counterfactuals.
+\newblock In \emph{Proceedings of the 4th Machine Intelligence for Medical
+  Image Analysis Workshop (MIDL)}, volume 227 of \emph{Proceedings of Machine
+  Learning Research}, 2023.
+
+\bibitem[Tan and Le(2021)]{efficientnetv2}
+M.~Tan and Q.~V. Le.
+\newblock {EfficientNetV2}: Smaller models and faster training.
+\newblock In \emph{Proceedings of the 38th International Conference on Machine
+  Learning (ICML)}, volume 139 of \emph{Proceedings of Machine Learning
+  Research}, pages 10096--10106, 2021.
+
+\bibitem[Varoquaux and Cheplygina(2022)]{varoquaux2022}
+G.~Varoquaux and V.~Cheplygina.
+\newblock Machine learning for medical imaging: Methodological failures and
+  recommendations for the future.
+\newblock \emph{npj Digital Medicine}, 5\penalty0 (1):\penalty0 48, 2022.
+
+\end{thebibliography}

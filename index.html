@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explanation-Supervised Attention | NIH ChestX-ray14</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   WHO / CLINICAL COLOR SYSTEM
+   Source: WHO Visual Identity · Okabe-Ito / Wong palette (Nature, NEJM,
+           Lancet, MICCAI standard · colorblind-safe across all 8 types)
+   ═══════════════════════════════════════════════════════════════════ */
+:root {
+  /* WHO Brand */
+  --who-navy:   #003A69;
+  --who-blue:   #0072B2;   /* Wong #6  — primary */
+  --who-sky:    #56B4E9;   /* Wong #3  — informational */
+  --who-teal:   #009FE3;   /* WHO secondary */
+  /* Clinical Status */
+  --clin-green: #009E73;   /* Wong #4  — normal/success */
+  --clin-amber: #E69F00;   /* Wong #2  — attention/moderate */
+  --clin-red:   #D55E00;   /* Wong #7  — critical/abnormal */
+  --clin-grape: #CC79A7;   /* Wong #8  — supplementary */
+  /* RdYlBu_r — heatmap colormap (MICCAI / Radiology standard) */
+  --heat-cold:  #313695;
+  --heat-mid:   #FEE090;
+  --heat-hot:   #A50026;
+  /* Layout */
+  --bg:         #F0F4F8;
+  --surface:    #FFFFFF;
+  --surface2:   #F8FAFC;
+  --border:     #CBD5E1;
+  --border2:    #E2E8F0;
+  --text:       #1E293B;
+  --text2:      #475569;
+  --muted:      #64748B;
+  --dicom-bg:   #0A0E17;
+  --dicom-surf: #111827;
+  --dicom-bdr:  #1E3A5F;
+  --radius:     8px;
+  --shadow:     0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:  0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.05);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; line-height: 1.6; }
+
+/* ── STICKY NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--who-navy); border-bottom: 3px solid var(--who-blue);
+  padding: 0 32px; display: flex; align-items: center; gap: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.nav-brand { color: #fff; font-size: 14px; font-weight: 700; letter-spacing: .02em; padding: 14px 0; margin-right: 32px; white-space: nowrap; }
+.nav-brand span { color: var(--who-sky); }
+.nav-links { display: flex; gap: 4px; flex: 1; }
+.nav-link { color: rgba(255,255,255,.7); font-size: 13px; padding: 14px 14px; text-decoration: none; transition: color .15s, background .15s; border-radius: 4px; white-space: nowrap; }
+.nav-link:hover, .nav-link.active { color: #fff; background: rgba(255,255,255,.1); }
+.nav-right { margin-left: auto; display: flex; gap: 8px; padding: 10px 0; }
+.btn-sm { font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 20px; text-decoration: none; transition: all .15s; }
+.btn-outline { border: 1px solid rgba(255,255,255,.4); color: rgba(255,255,255,.85); }
+.btn-outline:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.7); color: #fff; }
+.btn-filled { background: var(--who-blue); color: #fff; border: 1px solid var(--who-blue); }
+.btn-filled:hover { background: #005c91; }
+
+/* ── HERO ── */
+.hero { background: var(--who-navy); padding: 52px 32px 44px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.hero-inner { max-width: 900px; margin: 0 auto; }
+.venue-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.tag { font-size: 11px; font-weight: 600; padding: 3px 12px; border-radius: 20px; letter-spacing: .04em; text-transform: uppercase; }
+.tag-venue { background: rgba(86,180,233,.2); color: var(--who-sky); border: 1px solid rgba(86,180,233,.4); }
+.tag-data  { background: rgba(0,158,115,.2); color: #6ee7b7; border: 1px solid rgba(0,158,115,.4); }
+.tag-arch  { background: rgba(0,114,178,.2); color: #93c5fd; border: 1px solid rgba(0,114,178,.4); }
+.hero h1 { font-size: 26px; font-weight: 800; color: #fff; line-height: 1.25; margin-bottom: 14px; max-width: 800px; }
+.hero-authors { font-size: 15px; color: rgba(255,255,255,.8); margin-bottom: 6px; }
+.hero-authors strong { color: var(--who-sky); }
+.hero-affil { font-size: 13px; color: rgba(255,255,255,.5); margin-bottom: 24px; }
+.hero-links { display: flex; gap: 10px; flex-wrap: wrap; }
+.hero-link { font-size: 13px; font-weight: 600; padding: 8px 20px; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all .15s; }
+.hero-link-primary { background: var(--who-blue); color: #fff; }
+.hero-link-primary:hover { background: #005c91; }
+.hero-link-secondary { background: rgba(255,255,255,.1); color: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.2); }
+.hero-link-secondary:hover { background: rgba(255,255,255,.18); color: #fff; }
+
+/* ── SECTIONS ── */
+.section { padding: 52px 32px; max-width: 1100px; margin: 0 auto; }
+.section-title { font-size: 20px; font-weight: 700; color: var(--who-navy); margin-bottom: 4px; display: flex; align-items: center; gap: 10px; }
+.section-title::after { content: ''; flex: 1; height: 1px; background: var(--border2); }
+.section-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+.divider { border: none; border-top: 1px solid var(--border2); margin: 0; }
+
+/* ── ABSTRACT ── */
+.abstract-box { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--who-blue); border-radius: var(--radius); padding: 24px 28px; box-shadow: var(--shadow); }
+.abstract-box p { font-size: 14px; line-height: 1.75; color: var(--text2); }
+.abstract-box strong { color: var(--text); }
+
+/* ── METRIC CARDS ── */
+.metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.metric-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.mc-blue::before   { background: var(--who-blue); }
+.mc-green::before  { background: var(--clin-green); }
+.mc-amber::before  { background: var(--clin-amber); }
+.mc-red::before    { background: var(--clin-red); }
+.metric-card h4 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 10px; }
+.metric-val { font-size: 32px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+.mv-blue  { color: var(--who-blue); }
+.mv-green { color: var(--clin-green); }
+.mv-amber { color: var(--clin-amber); }
+.mv-red   { color: var(--clin-red); }
+.metric-note { font-size: 12px; color: var(--muted); }
+.metric-delta { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 10px; margin-top: 4px; }
+.delta-up   { background: #dcfce7; color: #166534; }
+.delta-down { background: #fef9c3; color: #854d0e; }
+
+/* ── TABS ── */
+.tab-row { display: flex; gap: 0; border-bottom: 2px solid var(--border2); margin-bottom: 24px; }
+.tab-btn { padding: 10px 20px; background: none; border: none; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s; }
+.tab-btn:hover { color: var(--who-blue); }
+.tab-btn.active { color: var(--who-blue); border-bottom-color: var(--who-blue); font-weight: 600; }
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+/* ── TABLES (Publication-quality) ── */
+.tbl-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+.tbl-caption { font-size: 12px; font-weight: 600; color: var(--muted); padding: 12px 16px 8px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border2); background: var(--surface2); }
+table { width: 100%; border-collapse: collapse; }
+th { background: var(--surface2); font-size: 12px; font-weight: 700; color: var(--text2); padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); white-space: nowrap; }
+td { font-size: 13px; color: var(--text); padding: 9px 14px; border-bottom: 1px solid var(--border2); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f8fafc; }
+.td-best { color: var(--clin-green); font-weight: 700; }
+.td-note { font-size: 11px; color: var(--muted); }
+.chip { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 9px; border-radius: 4px; }
+.chip-base    { background: #e0f2fe; color: #0369a1; }
+.chip-variant { background: #fef3c7; color: #92400e; }
+.chip-post    { background: #f3e8ff; color: #6b21a8; }
+.badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; margin-left: 4px; }
+.badge-best { background: #dcfce7; color: #166534; }
+.badge-sig  { background: #dbeafe; color: #1e40af; }
+
+/* ── CHARTS ── */
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+.chart-card h4 { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.chart-card p  { font-size: 11px; color: var(--muted); margin-bottom: 14px; }
+.chart-inner { position: relative; height: 260px; }
+.chart-inner-tall { position: relative; height: 320px; }
+
+/* ── ARCHITECTURE ── */
+.arch-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); overflow-x: auto; }
+.arch-legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+.arch-legend-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--border2); border-radius: 6px; background: var(--surface2); }
+.arch-pip { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; margin-top: 3px; }
+.arch-legend-item strong { display: block; font-size: 12px; color: var(--text); margin-bottom: 2px; }
+.arch-legend-item p { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+/* ── VISUALIZATION / DICOM ── */
+.dicom-panel { background: var(--dicom-bg); border: 1px solid var(--dicom-bdr); border-radius: var(--radius); padding: 24px; }
+.dicom-panel h4 { color: rgba(255,255,255,.85); font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+.dicom-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.dicom-controls { display: flex; align-items: center; gap: 12px; }
+.dicom-label { color: rgba(255,255,255,.5); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.dicom-select { background: var(--dicom-surf); color: rgba(255,255,255,.85); border: 1px solid var(--dicom-bdr); border-radius: 4px; padding: 5px 10px; font-size: 12px; }
+.dicom-range-wrap { display: flex; align-items: center; gap: 6px; }
+.dicom-range-wrap input { accent-color: var(--who-sky); width: 90px; }
+.dicom-range-wrap span { font-size: 11px; color: var(--who-sky); min-width: 28px; }
+.canvas-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.canvas-item { text-align: center; }
+.canvas-item label { display: block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: rgba(255,255,255,.45); margin-bottom: 6px; }
+.canvas-item canvas { border-radius: 4px; border: 1px solid var(--dicom-bdr); display: block; margin: 0 auto; }
+.canvas-item .canvas-note { font-size: 10px; color: rgba(255,255,255,.3); margin-top: 4px; }
+.disease-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 16px; }
+.disease-btn { background: rgba(255,255,255,.06); border: 1px solid var(--dicom-bdr); color: rgba(255,255,255,.6); font-size: 10px; padding: 5px 4px; border-radius: 4px; cursor: pointer; transition: all .15s; text-align: center; line-height: 1.3; }
+.disease-btn:hover { background: rgba(0,114,178,.2); border-color: var(--who-blue); color: rgba(255,255,255,.9); }
+.disease-btn.active { background: rgba(0,114,178,.25); border-color: var(--who-blue); color: var(--who-sky); font-weight: 600; }
+.pred-list { margin-top: 18px; }
+.pred-row { display: grid; grid-template-columns: 150px 1fr 44px 16px; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+.pred-name { color: rgba(255,255,255,.75); }
+.pred-track { height: 8px; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; }
+.pred-fill  { height: 100%; border-radius: 4px; transition: width .4s ease; }
+.pred-pct   { color: rgba(255,255,255,.5); text-align: right; font-size: 11px; }
+.pred-flag  { text-align: center; }
+
+/* ── DEMO LAYOUT ── */
+.demo-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+.demo-left { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+.demo-right { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+.demo-right h4 { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border2); }
+.ctrl-group { margin-bottom: 16px; }
+.ctrl-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 5px; }
+.ctrl-label span { color: var(--who-blue); margin-left: 4px; font-size: 12px; }
+select.ctrl-select { width: 100%; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; font-size: 13px; cursor: pointer; }
+input[type=range] { width: 100%; accent-color: var(--who-blue); cursor: pointer; }
+.hint-box { background: #fef9c3; border: 1px solid #fde047; border-radius: 6px; padding: 10px 12px; font-size: 11px; color: #713f12; line-height: 1.5; margin-top: 12px; }
+
+/* ── ABLATION ── */
+.ablation-note { font-size: 12px; color: var(--muted); margin-top: 12px; line-height: 1.5; }
+.check { color: var(--clin-green); font-weight: 700; }
+.cross { color: #94a3b8; }
+
+/* ── CITATION ── */
+.citation-box { background: var(--dicom-surf); border: 1px solid var(--dicom-bdr); border-radius: var(--radius); padding: 20px 24px; font-family: 'SF Mono', 'Consolas', 'Courier New', monospace; font-size: 12px; color: #a5f3fc; line-height: 1.7; overflow-x: auto; }
+.citation-box .c-key   { color: #7dd3fc; }
+.citation-box .c-val   { color: #fde68a; }
+.citation-box .c-punct { color: #94a3b8; }
+.copy-btn { float: right; font-size: 11px; padding: 4px 12px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); color: rgba(255,255,255,.7); border-radius: 4px; cursor: pointer; margin-top: -4px; }
+.copy-btn:hover { background: rgba(255,255,255,.14); color: #fff; }
+
+/* ── KEY-FINDING CALLOUTS ── */
+.findings-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.finding-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+.finding-card .fc-val { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+.finding-card h5 { font-size: 12px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.finding-card p { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+/* ── FOOTER ── */
+footer { background: var(--who-navy); color: rgba(255,255,255,.5); font-size: 12px; text-align: center; padding: 24px 32px; border-top: 3px solid var(--who-blue); }
+footer a { color: var(--who-sky); text-decoration: none; }
+footer strong { color: rgba(255,255,255,.8); }
+
+/* ── RESPONSIVE ── */
+@media(max-width: 900px) {
+  .metrics-grid, .arch-legend, .findings-grid { grid-template-columns: 1fr 1fr; }
+  .charts-grid, .demo-layout { grid-template-columns: 1fr; }
+  .canvas-row { grid-template-columns: 1fr 1fr; }
+  .disease-grid { grid-template-columns: repeat(4,1fr); }
+  nav { padding: 0 16px; }
+  .section { padding: 36px 16px; }
+  .hero { padding: 36px 16px 28px; }
+  .hero h1 { font-size: 20px; }
+  .nav-links { display: none; }
+}
+@media(max-width:600px) {
+  .metrics-grid, .arch-legend, .findings-grid, .canvas-row { grid-template-columns: 1fr; }
+  .disease-grid { grid-template-columns: repeat(3,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ NAVIGATION ═══════════════════════════════ -->
+<nav>
+  <div class="nav-brand">ChestX-ray14 &nbsp;<span>·</span>&nbsp; Attention Research</div>
+  <div class="nav-links">
+    <a class="nav-link active" href="#abstract">Abstract</a>
+    <a class="nav-link" href="#highlights">Highlights</a>
+    <a class="nav-link" href="#method">Method</a>
+    <a class="nav-link" href="#results">Results</a>
+    <a class="nav-link" href="#visualization">Visualization</a>
+    <a class="nav-link" href="#perclass">Per-Class</a>
+    <a class="nav-link" href="#ablation">Ablation</a>
+    <a class="nav-link" href="#citation">Cite</a>
+  </div>
+  <div class="nav-right">
+    <a class="btn-sm btn-outline" href="report/DL_Project_Report_FINAL.docx">📄 Paper</a>
+    <a class="btn-sm btn-filled" href="app.py">⚡ Streamlit Demo</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════ HERO ══════════════════════════════════════ -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="venue-tags">
+      <span class="tag tag-venue">CSCD 618 / DSCD 604</span>
+      <span class="tag tag-data">NIH ChestX-ray14</span>
+      <span class="tag tag-arch">Attention CNN · Multi-Label Classification</span>
+    </div>
+    <h1>Explanation-Supervised Attention for<br>Multi-Label Thoracic Disease Classification</h1>
+    <p class="hero-authors"><strong>Israel Agyekum</strong> &nbsp;·&nbsp; <strong>Joel Dadi-Klutse</strong> &nbsp;·&nbsp; <strong>Eric Okyere</strong></p>
+    <p class="hero-affil">MPhil Data Science &nbsp;·&nbsp; Department of Computer Science &nbsp;·&nbsp; 2025–2026</p>
+    <div class="hero-links">
+      <a class="hero-link hero-link-primary" href="report/DL_Project_Report_FINAL.docx">📄 Full Paper</a>
+      <a class="hero-link hero-link-secondary" href="https://github.com/" target="_blank">💻 GitHub</a>
+      <a class="hero-link hero-link-secondary" href="https://nihcc.app.box.com/v/ChestXray-NIHCC" target="_blank">🗄️ NIH Dataset</a>
+      <a class="hero-link hero-link-secondary" href="app.py">🔬 Streamlit App</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ ABSTRACT ══════════════════════════════════ -->
+<hr class="divider">
+<div class="section" id="abstract">
+  <h2 class="section-title">Abstract</h2>
+  <p class="section-sub">Project summary</p>
+  <div class="abstract-box">
+    <p>
+      Deep learning models for thoracic disease classification from chest radiographs achieve strong diagnostic performance,
+      yet their spatial reasoning remains opaque. Post-hoc methods such as Grad-CAM generate attention maps only at inference
+      time and are not optimised to align with clinical findings. We propose a <strong>variant CNN</strong> that incorporates
+      <strong>explanation supervision</strong> directly into training: a spatial attention module (A&nbsp;∈&nbsp;ℝ<sup>1×7×7</sup>)
+      is jointly trained to classify 14 thoracic pathologies and to place its activation on clinician-annotated bounding boxes via
+      an auxiliary loss L<sub>attn</sub>. A label co-occurrence regulariser L<sub>corr</sub> further constrains predictions to
+      respect clinical co-morbidity patterns. Evaluated on the NIH ChestX-ray14 benchmark (112,120 images, 880 bounding-box
+      test cases), our <strong>ResNet-50 variant achieves a macro AUC of 0.7603</strong> and an <strong>IoU of 0.2991</strong>,
+      representing a <strong>+34.7 % relative localisation gain</strong> over post-hoc Grad-CAM at zero additional inference cost.
+      DenseNet-121 attains the highest IoU of 0.3178. Statistical significance was confirmed via DeLong's test
+      (p&nbsp;&lt;&nbsp;3&nbsp;×&nbsp;10<sup>−31</sup>) across all 14 pathology classes.
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════ HIGHLIGHTS ═══════════════════════════════ -->
+<hr class="divider">
+<div class="section" id="highlights">
+  <h2 class="section-title">Key Results</h2>
+  <p class="section-sub">Primary metrics — test split (930 patients, 880 bbox-annotated images)</p>
+  <div class="metrics-grid">
+    <div class="metric-card mc-blue">
+      <h4>Best Classification AUC</h4>
+      <div class="metric-val mv-blue" id="cnt-auc">—</div>
+      <div class="metric-note">ResNet-50 Baseline &nbsp;·&nbsp; macro over 14 classes</div>
+    </div>
+    <div class="metric-card mc-green">
+      <h4>Best Localisation IoU</h4>
+      <div class="metric-val mv-green" id="cnt-iou">—</div>
+      <div class="metric-note">DenseNet-121 Attention Variant</div>
+      <span class="metric-delta delta-up">+34.7 % vs Grad-CAM</span>
+    </div>
+    <div class="metric-card mc-amber">
+      <h4>Pointing Game Accuracy</h4>
+      <div class="metric-val mv-amber" id="cnt-pg">—</div>
+      <div class="metric-note">ResNet-50 Attention Variant</div>
+      <span class="metric-delta delta-up">+33.6 % vs Grad-CAM</span>
+    </div>
+    <div class="metric-card mc-red">
+      <h4>Statistical Significance</h4>
+      <div class="metric-val mv-red" style="font-size:22px; margin-top:6px">p &lt; 3×10⁻³¹</div>
+      <div class="metric-note">DeLong's test &nbsp;·&nbsp; ResNet50-Attn vs Base</div>
+      <span class="metric-delta delta-up">All 14 classes</span>
+    </div>
+  </div>
+
+  <div style="margin-top:24px">
+    <div class="findings-grid">
+      <div class="finding-card">
+        <div class="fc-val" style="color:var(--clin-green)">+34.7%</div>
+        <h5>Localisation Gain (IoU)</h5>
+        <p>Relative IoU improvement of ResNet-50 Attention Variant over post-hoc Grad-CAM applied to the same backbone. DenseNet-121 Attn achieves best absolute IoU of 0.3178.</p>
+      </div>
+      <div class="finding-card">
+        <div class="fc-val" style="color:var(--clin-amber)">−9.9%</div>
+        <h5>AUC Trade-off (Expected)</h5>
+        <p>Explanation supervision diverts capacity toward spatial alignment. ResNet-50 Attn AUC = 0.7603 vs 0.8434 baseline. L<sub>corr</sub> partially recovers classification performance.</p>
+      </div>
+      <div class="finding-card">
+        <div class="fc-val" style="color:var(--who-blue)">L<sub>attn</sub></div>
+        <h5>Primary Driver of Gain</h5>
+        <p>Ablation confirms L<sub>attn</sub> is the primary localisation driver (+30.2% IoU). L<sub>corr</sub> adds +1.4% AUC recovery without spatial benefit. Together they form the optimal trade-off point.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ METHOD ════════════════════════════════════ -->
+<hr class="divider">
+<div class="section" id="method">
+  <h2 class="section-title">Method</h2>
+  <p class="section-sub">Architecture, loss functions, and training protocol</p>
+
+  <div class="tab-row" id="method-tabs">
+    <button class="tab-btn active" onclick="switchTab('method','arch',this)">Architecture</button>
+    <button class="tab-btn" onclick="switchTab('method','loss',this)">Loss Functions</button>
+    <button class="tab-btn" onclick="switchTab('method','training',this)">Training Protocol</button>
+  </div>
+
+  <!-- Architecture -->
+  <div id="method-arch" class="tab-pane active">
+    <div class="arch-card">
+      <svg viewBox="0 0 980 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;min-width:700px">
+        <defs>
+          <marker id="arr" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#94a3b8"/></marker>
+          <marker id="arr-b" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#0072B2"/></marker>
+          <marker id="arr-g" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#009E73"/></marker>
+          <marker id="arr-a" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#E69F00"/></marker>
+          <marker id="arr-r" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#D55E00"/></marker>
+        </defs>
+        <!-- Row label -->
+        <text x="16" y="30" fill="#94a3b8" font-size="10" font-weight="600" letter-spacing=".06em">FORWARD PASS →</text>
+        <text x="16" y="320" fill="#94a3b8" font-size="10" font-weight="600" letter-spacing=".06em">LOSS COMPUTATION →</text>
+        <!-- Boxes: Forward -->
+        <!-- Input -->
+        <rect x="30" y="50" width="105" height="75" rx="6" fill="#EFF6FF" stroke="#0072B2" stroke-width="1.5"/>
+        <text x="83" y="78" text-anchor="middle" fill="#1e40af" font-size="11" font-weight="700">Input Image</text>
+        <text x="83" y="93" text-anchor="middle" fill="#64748b" font-size="10">224 × 224 × 3</text>
+        <text x="83" y="108" text-anchor="middle" fill="#64748b" font-size="10">grayscale → RGB</text>
+        <!-- Backbone -->
+        <rect x="175" y="38" width="125" height="100" rx="6" fill="#F0FDF4" stroke="#009E73" stroke-width="1.5"/>
+        <text x="238" y="63" text-anchor="middle" fill="#166534" font-size="11" font-weight="700">CNN Backbone</text>
+        <text x="238" y="78" text-anchor="middle" fill="#64748b" font-size="10">ResNet-50 / Dense-121</text>
+        <text x="238" y="93" text-anchor="middle" fill="#64748b" font-size="10">EfficientNet-B0</text>
+        <text x="238" y="110" text-anchor="middle" fill="#16a34a" font-size="10" font-weight="600">F ∈ ℝ^(C×7×7)</text>
+        <text x="238" y="126" text-anchor="middle" fill="#64748b" font-size="10">ImageNet pretrained</text>
+        <!-- Channel Attn -->
+        <rect x="350" y="60" width="110" height="76" rx="6" fill="#FAF5FF" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="405" y="83" text-anchor="middle" fill="#6d28d9" font-size="11" font-weight="700">Channel Attn</text>
+        <text x="405" y="98" text-anchor="middle" fill="#64748b" font-size="10">CBAM squeeze-excite</text>
+        <text x="405" y="113" text-anchor="middle" fill="#7c3aed" font-size="10">F̃ = F ⊗ c_a</text>
+        <text x="405" y="127" text-anchor="middle" fill="#64748b" font-size="10">(optional)</text>
+        <!-- Spatial Attn HIGHLIGHTED -->
+        <rect x="510" y="38" width="125" height="100" rx="6" fill="#FFFBEB" stroke="#E69F00" stroke-width="2.5"/>
+        <text x="573" y="63" text-anchor="middle" fill="#92400e" font-size="11" font-weight="700">Spatial Attention</text>
+        <text x="573" y="79" text-anchor="middle" fill="#64748b" font-size="10">Conv 1×1 → sigmoid</text>
+        <text x="573" y="95" text-anchor="middle" fill="#b45309" font-size="12" font-weight="800">A ∈ ℝ^(1×7×7)</text>
+        <text x="573" y="111" text-anchor="middle" fill="#64748b" font-size="10">F' = F̃ ⊙ A</text>
+        <text x="573" y="127" text-anchor="middle" fill="#b45309" font-size="10" font-weight="600">★ Explanation-Supervised</text>
+        <!-- GAP + Linear -->
+        <rect x="685" y="50" width="110" height="76" rx="6" fill="#EFF6FF" stroke="#0072B2" stroke-width="1.5"/>
+        <text x="740" y="75" text-anchor="middle" fill="#1e40af" font-size="11" font-weight="700">GAP + Classifier</text>
+        <text x="740" y="90" text-anchor="middle" fill="#64748b" font-size="10">GlobalAvgPool</text>
+        <text x="740" y="105" text-anchor="middle" fill="#64748b" font-size="10">Linear → 14</text>
+        <text x="740" y="120" text-anchor="middle" fill="#0072B2" font-size="10">→ sigmoid</text>
+        <!-- Output -->
+        <rect x="845" y="60" width="110" height="76" rx="6" fill="#F0FDF4" stroke="#009E73" stroke-width="1.5"/>
+        <text x="900" y="83" text-anchor="middle" fill="#166534" font-size="11" font-weight="700">ŷ (14 probs)</text>
+        <text x="900" y="99" text-anchor="middle" fill="#64748b" font-size="10">P(pathology | x)</text>
+        <text x="900" y="115" text-anchor="middle" fill="#64748b" font-size="10">multi-label [0,1]</text>
+        <text x="900" y="129" text-anchor="middle" fill="#16a34a" font-size="10">zero extra cost</text>
+        <!-- Arrows forward -->
+        <line x1="135" y1="88" x2="173" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="300" y1="88" x2="348" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="460" y1="88" x2="508" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="635" y1="88" x2="683" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="795" y1="88" x2="843" y2="88" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arr)"/>
+        <!-- Loss boxes -->
+        <rect x="100" y="330" width="120" height="55" rx="6" fill="#FFF5F5" stroke="#D55E00" stroke-width="1.5"/>
+        <text x="160" y="350" text-anchor="middle" fill="#7f1d1d" font-size="12" font-weight="700">L_cls</text>
+        <text x="160" y="366" text-anchor="middle" fill="#64748b" font-size="10">FocalLoss + wBCE</text>
+        <text x="160" y="380" text-anchor="middle" fill="#64748b" font-size="10">classification</text>
+        <rect x="420" y="330" width="120" height="55" rx="6" fill="#FFFBEB" stroke="#E69F00" stroke-width="2"/>
+        <text x="480" y="350" text-anchor="middle" fill="#92400e" font-size="12" font-weight="700">L_attn</text>
+        <text x="480" y="366" text-anchor="middle" fill="#64748b" font-size="10">BCE(A↑, M_box)</text>
+        <text x="480" y="380" text-anchor="middle" fill="#b45309" font-size="10" font-weight="600">← primary driver</text>
+        <rect x="740" y="330" width="120" height="55" rx="6" fill="#FAF5FF" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="800" y="350" text-anchor="middle" fill="#4c1d95" font-size="12" font-weight="700">L_corr</text>
+        <text x="800" y="366" text-anchor="middle" fill="#64748b" font-size="10">co-occurrence</text>
+        <text x="800" y="380" text-anchor="middle" fill="#64748b" font-size="10">regulariser</text>
+        <!-- Total loss -->
+        <rect x="300" y="256" width="380" height="24" rx="4" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+        <text x="490" y="272" text-anchor="middle" fill="#374151" font-size="11.5" font-weight="600">L = L_cls + λ_attn · L_attn + λ_corr · L_corr</text>
+        <text x="490" y="300" text-anchor="middle" fill="#64748b" font-size="10">λ_attn = 2.0 &nbsp;&nbsp; λ_corr = 0.3 &nbsp;&nbsp; (tuned on validation set)</text>
+        <!-- Connection lines -->
+        <line x1="900" y1="136" x2="900" y2="220" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4"/>
+        <line x1="900" y1="220" x2="160" y2="220" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4"/>
+        <line x1="160" y1="220" x2="160" y2="330" stroke="#D55E00" stroke-width="1.5" marker-end="url(#arr-r)"/>
+        <line x1="573" y1="138" x2="573" y2="210" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4"/>
+        <line x1="573" y1="210" x2="480" y2="210" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4"/>
+        <line x1="480" y1="210" x2="480" y2="330" stroke="#E69F00" stroke-width="1.5" marker-end="url(#arr-a)"/>
+        <line x1="800" y1="220" x2="800" y2="330" stroke="#8B5CF6" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="160" y1="256" x2="300" y2="268" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3"/>
+        <line x1="480" y1="256" x2="490" y2="256" stroke="#94a3b8" stroke-width="1"/>
+        <line x1="800" y1="256" x2="680" y2="268" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3"/>
+        <!-- M_box annotation -->
+        <text x="440" y="202" fill="#92400e" font-size="10">M_box (bbox mask)</text>
+      </svg>
+      <div class="arch-legend">
+        <div class="arch-legend-item"><div class="arch-pip" style="background:#009E73"></div><div><strong>CNN Backbone</strong><p>ImageNet-pretrained encoder. Produces 7×7 feature map F. Three variants tested: ResNet-50, DenseNet-121, EfficientNet-B0.</p></div></div>
+        <div class="arch-legend-item"><div class="arch-pip" style="background:#E69F00"></div><div><strong>Spatial Attention (core)</strong><p>1×1 Conv → sigmoid. Produces A ∈ ℝ^(1×7×7). Attended features: F' = F̃ ⊙ A. Trained jointly via L_attn to align with bounding boxes.</p></div></div>
+        <div class="arch-legend-item"><div class="arch-pip" style="background:#8B5CF6"></div><div><strong>Channel Attention (CBAM)</strong><p>Squeeze-excitation over channels. Optional module; empirically aids classification without penalising localisation.</p></div></div>
+        <div class="arch-legend-item"><div class="arch-pip" style="background:#D55E00"></div><div><strong>L_cls — Classification</strong><p>Focal loss (γ=2) combined with inverse-frequency weighted BCE. Handles the severe label imbalance across all 14 NIH classes.</p></div></div>
+        <div class="arch-legend-item"><div class="arch-pip" style="background:#E69F00"></div><div><strong>L_attn — Explanation Supervision</strong><p>BCE between upsampled 7×7 attention map and bounding-box mask. Primary driver of IoU improvement (+34.7%). Applied only to annotated samples.</p></div></div>
+        <div class="arch-legend-item"><div class="arch-pip" style="background:#8B5CF6"></div><div><strong>L_corr — Co-occurrence</strong><p>Penalises clinically implausible label combinations using a precomputed co-occurrence matrix. Recovers ~1.4% AUC with no spatial cost.</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loss Functions -->
+  <div id="method-loss" class="tab-pane">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow)">
+      <p style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:20px">The total training loss combines three terms, each serving a distinct purpose in the learning objective:</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+        <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:16px">
+          <div style="font-size:16px;font-weight:800;color:var(--clin-red);margin-bottom:8px">L<sub>cls</sub></div>
+          <div style="font-family:monospace;font-size:12px;background:#fff;border:1px solid var(--border2);border-radius:4px;padding:10px;margin-bottom:10px;color:#374151">
+            FL(p,y) = −α(1−p<sub>t</sub>)<sup>γ</sup>log(p<sub>t</sub>)<br>
+            + w<sub>c</sub> · BCE(ŷ, y)
+          </div>
+          <p style="font-size:12px;color:var(--muted)">Focal loss (γ=2, α=0.25) downweights easy negatives. Class weight w_c = N_neg/N_pos handles imbalance.</p>
+        </div>
+        <div style="background:var(--surface2);border:2px solid var(--clin-amber);border-radius:6px;padding:16px">
+          <div style="font-size:16px;font-weight:800;color:var(--clin-amber);margin-bottom:8px">L<sub>attn</sub> <span style="font-size:11px;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:10px;margin-left:4px">★ Key</span></div>
+          <div style="font-family:monospace;font-size:12px;background:#fff;border:1px solid var(--border2);border-radius:4px;padding:10px;margin-bottom:10px;color:#374151">
+            L<sub>attn</sub> = BCE(↑A, M<sub>box</sub>)<br><br>
+            where ↑A = upsample(A, 224)
+          </div>
+          <p style="font-size:12px;color:var(--muted)">Binary cross-entropy between the upsampled 7×7 attention map and the bounding-box binary mask. Applied only to the 880 annotated samples per epoch.</p>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:16px">
+          <div style="font-size:16px;font-weight:800;color:#8B5CF6;margin-bottom:8px">L<sub>corr</sub></div>
+          <div style="font-family:monospace;font-size:12px;background:#fff;border:1px solid var(--border2);border-radius:4px;padding:10px;margin-bottom:10px;color:#374151">
+            L<sub>corr</sub> = ∑<sub>i≠j</sub> C<sub>ij</sub> · ŷ<sub>i</sub> · (1−ŷ<sub>j</sub>)
+          </div>
+          <p style="font-size:12px;color:var(--muted)">Penalises predictions that violate the training-set co-occurrence matrix C. Encourages co-occurring pathologies to be jointly detected.</p>
+        </div>
+      </div>
+      <div style="margin-top:18px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:14px 16px;font-size:13px;color:#0c4a6e">
+        <strong>Total loss: </strong> L = L<sub>cls</sub> + λ<sub>attn</sub> · L<sub>attn</sub> + λ<sub>corr</sub> · L<sub>corr</sub>
+        &nbsp;&nbsp;&nbsp; λ<sub>attn</sub> = 2.0, &nbsp; λ<sub>corr</sub> = 0.3 &nbsp;&nbsp; (selected on validation AUC + IoU Pareto front)
+      </div>
+    </div>
+  </div>
+
+  <!-- Training Protocol -->
+  <div id="method-training" class="tab-pane">
+    <div class="tbl-wrap">
+      <div class="tbl-caption">Training Configuration</div>
+      <table>
+        <thead><tr><th>Parameter</th><th>Value</th><th>Rationale</th></tr></thead>
+        <tbody>
+          <tr><td>Optimiser</td><td>Adam (β₁=0.9, β₂=0.999)</td><td>Standard for medical imaging CNNs</td></tr>
+          <tr><td>Learning rate</td><td>1 × 10⁻⁴ → ReduceLROnPlateau (patience=4)</td><td>Prevents oscillation near optimum</td></tr>
+          <tr><td>Weight decay</td><td>1 × 10⁻⁵</td><td>L₂ regularisation</td></tr>
+          <tr><td>Batch size</td><td>32</td><td>Fits Kaggle P100/T4 (16 GB)</td></tr>
+          <tr><td>Epochs</td><td>30 (early stop patience=8)</td><td>Validated on macro AUC</td></tr>
+          <tr><td>Input normalisation</td><td>ImageNet mean/std &nbsp;(μ=0.485/0.456/0.406)</td><td>Required for pretrained weights</td></tr>
+          <tr><td>Augmentation</td><td>HFlip, Rotate ±10°, ColorJitter(b,c=0.1)</td><td>Chest X-ray–appropriate; no vertical flip</td></tr>
+          <tr><td>Patient-level split</td><td>Train 7438 / Val 930 / Test 930 patients</td><td>Prevents patient-level data leakage</td></tr>
+          <tr><td>Compute</td><td>Kaggle P100/T4 (free tier)</td><td>~30 GPU-hrs/week per account</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ RESULTS ══════════════════════════════════ -->
+<hr class="divider">
+<div class="section" id="results">
+  <h2 class="section-title">Experimental Results</h2>
+  <p class="section-sub">Test-set performance across all 7 configurations — patient-level stratified split</p>
+
+  <div class="tbl-wrap" style="margin-bottom:24px">
+    <div class="tbl-caption">Table 1 &nbsp;·&nbsp; Main Results — Classification and Localisation Performance</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th><th>Type</th>
+          <th>Macro AUC ↑</th><th>Mean IoU ↑</th><th>Pointing Game ↑</th>
+          <th>ΔAUCvs Base</th><th>ΔIoU vs GradCAM</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>ResNet-50</strong></td><td><span class="chip chip-base">Baseline</span></td>
+          <td class="td-best">0.8434 <span class="badge badge-best">Best AUC</span></td><td>0.2228</td><td>0.3789</td>
+          <td>—</td><td>—</td>
+        </tr>
+        <tr>
+          <td><strong>ResNet-50-Attn</strong></td><td><span class="chip chip-variant">Variant</span></td>
+          <td>0.7603</td><td>0.2991</td><td class="td-best">0.5063 <span class="badge badge-sig">+33.6%</span></td>
+          <td style="color:var(--clin-amber)">−0.0831</td><td style="color:var(--clin-green)">+0.0763</td>
+        </tr>
+        <tr>
+          <td><strong>DenseNet-121</strong></td><td><span class="chip chip-base">Baseline</span></td>
+          <td>0.8198</td><td>0.2342</td><td>0.3912</td>
+          <td>—</td><td>—</td>
+        </tr>
+        <tr>
+          <td><strong>DenseNet-121-Attn</strong></td><td><span class="chip chip-variant">Variant</span></td>
+          <td>0.7487</td><td class="td-best">0.3178 <span class="badge badge-best">Best IoU</span></td><td>0.5201</td>
+          <td style="color:var(--clin-amber)">−0.0711</td><td style="color:var(--clin-green)">+0.0836</td>
+        </tr>
+        <tr>
+          <td><strong>EfficientNet-B0</strong></td><td><span class="chip chip-base">Baseline</span></td>
+          <td>0.7989</td><td>0.2156</td><td>0.3645</td>
+          <td>—</td><td>—</td>
+        </tr>
+        <tr>
+          <td><strong>EfficientNet-B0-Attn</strong></td><td><span class="chip chip-variant">Variant</span></td>
+          <td>0.7234</td><td>0.2834</td><td>0.4812</td>
+          <td style="color:var(--clin-amber)">−0.0755</td><td style="color:var(--clin-green)">+0.0678</td>
+        </tr>
+        <tr style="background:#f8f9fa">
+          <td><em>Grad-CAM (post-hoc)</em></td><td><span class="chip chip-post">Post-hoc</span></td>
+          <td colspan="2"><em class="td-note">Applied to baseline checkpoints — no re-training</em></td>
+          <td>0.3789</td><td colspan="2">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h4>Macro AUC by Model</h4>
+      <p>Baseline (blue) vs Attention Variant (amber) — Wong palette, colorblind-safe</p>
+      <div class="chart-inner"><canvas id="aucChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h4>Localisation — IoU and Pointing Game</h4>
+      <p>Attention variants vs post-hoc Grad-CAM applied to same backbones</p>
+      <div class="chart-inner"><canvas id="locChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ VISUALIZATION ════════════════════════════ -->
+<hr class="divider">
+<div class="section" id="visualization">
+  <h2 class="section-title">Attention Visualisation</h2>
+  <p class="section-sub">Supervised attention (ours) vs post-hoc Grad-CAM — RdYlBu_r colormap (MICCAI / Radiology standard)</p>
+
+  <div class="demo-layout">
+    <div class="demo-left">
+      <div class="dicom-panel">
+        <div class="dicom-header">
+          <h4>DICOM Viewer — Chest Radiograph (PA View)</h4>
+          <div class="dicom-controls">
+            <span class="dicom-label">Opacity</span>
+            <div class="dicom-range-wrap">
+              <input type="range" min="20" max="85" value="60" id="slOpacity" oninput="setOpacity(this)">
+              <span id="opacityVal">0.60</span>
+            </div>
+          </div>
+        </div>
+        <div class="canvas-row">
+          <div class="canvas-item"><label>Input + GT Annotation</label><canvas id="cvInput" width="220" height="220"></canvas><div class="canvas-note">Green = bounding box (GT)</div></div>
+          <div class="canvas-item"><label>Supervised Attention (Ours)</label><canvas id="cvAttn" width="220" height="220"></canvas><div class="canvas-note">RdYlBu_r colormap</div></div>
+          <div class="canvas-item"><label>Post-hoc Grad-CAM</label><canvas id="cvGcam" width="220" height="220"></canvas><div class="canvas-note">Same backbone, no supervision</div></div>
+        </div>
+        <div class="disease-grid" id="diseaseGrid"></div>
+        <div class="pred-list" id="predList"></div>
+      </div>
+    </div>
+    <div class="demo-right">
+      <h4>Demo Controls</h4>
+      <div class="ctrl-group">
+        <div class="ctrl-label">Backbone</div>
+        <select class="ctrl-select" id="selBackbone" onchange="renderViz()">
+          <option value="resnet50">ResNet-50</option>
+          <option value="densenet121">DenseNet-121</option>
+          <option value="efficientnet">EfficientNet-B0</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">Mode</div>
+        <select class="ctrl-select" id="selMode" onchange="renderViz()">
+          <option value="variant">Attention Variant (Supervised)</option>
+          <option value="baseline">Baseline + Grad-CAM only</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">Detection threshold<span id="threshDisp">0.50</span></div>
+        <input type="range" min="0" max="100" value="50" id="slThresh" oninput="setThresh(this)">
+      </div>
+      <div class="hint-box">
+        ⚠️ <strong>Demo mode</strong> — Heatmaps are generated algorithmically to illustrate colormap and spatial positioning. Load model checkpoints from Google Drive and run <code>streamlit run app.py</code> for true inference.
+      </div>
+      <div style="margin-top:16px;padding:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:8px">Colormap Legend (RdYlBu_r)</div>
+        <div style="height:14px;border-radius:4px;background:linear-gradient(to right, #313695, #4575B4, #74ADD1, #ABD9E9, #FEE090, #FDAE61, #F46D43, #D73027, #A50026);margin-bottom:4px"></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>Low activation</span><span>High activation</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ PER-CLASS ════════════════════════════════ -->
+<hr class="divider">
+<div class="section" id="perclass">
+  <h2 class="section-title">Per-Class AUC</h2>
+  <p class="section-sub">Table 2 — ResNet-50 Baseline vs Attention Variant across all 14 NIH pathology classes</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div class="tbl-wrap">
+      <div class="tbl-caption">Per-Class AUC — ResNet-50 (Baseline vs Variant)</div>
+      <table id="perClassTable">
+        <thead><tr><th>Pathology</th><th>Baseline</th><th>Variant</th><th>Δ AUC</th></tr></thead>
+        <tbody id="perClassBody"></tbody>
+      </table>
+    </div>
+    <div class="chart-card">
+      <h4>Per-Class AUC Comparison</h4>
+      <p>ResNet-50 Baseline (WHO blue) vs Attention Variant (clinical amber)</p>
+      <div class="chart-inner-tall"><canvas id="perClassChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ ABLATION ══════════════════════════════════ -->
+<hr class="divider">
+<div class="section" id="ablation">
+  <h2 class="section-title">Ablation Study</h2>
+  <p class="section-sub">Contribution of each loss component — ResNet-50 backbone</p>
+
+  <div class="tbl-wrap" style="margin-bottom:12px">
+    <div class="tbl-caption">Table 3 &nbsp;·&nbsp; Ablation — Loss Component Analysis (ResNet-50, Test Set)</div>
+    <table>
+      <thead>
+        <tr><th>Configuration</th><th>L_cls</th><th>L_attn</th><th>L_corr</th><th>Macro AUC ↑</th><th>Mean IoU ↑</th><th>ΔIoU vs Base</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Baseline</strong></td>
+          <td class="check">✓</td><td class="cross">✗</td><td class="cross">✗</td>
+          <td class="td-best">0.8434</td><td>0.2228</td><td>—</td>
+        </tr>
+        <tr>
+          <td><strong>+ L<sub>attn</sub> only</strong></td>
+          <td class="check">✓</td><td class="check">✓</td><td class="cross">✗</td>
+          <td>0.7512</td><td style="color:var(--clin-green)">0.2934</td><td style="color:var(--clin-green)">+31.7%</td>
+        </tr>
+        <tr>
+          <td><strong>+ L<sub>corr</sub> only</strong></td>
+          <td class="check">✓</td><td class="cross">✗</td><td class="check">✓</td>
+          <td>0.8389</td><td>0.2228</td><td>0.0%</td>
+        </tr>
+        <tr style="background:#fffbeb">
+          <td><strong>Full (L<sub>attn</sub> + L<sub>corr</sub>)</strong> ★</td>
+          <td class="check">✓</td><td class="check">✓</td><td class="check">✓</td>
+          <td>0.7603</td><td class="td-best">0.2991</td><td style="color:var(--clin-green)">+34.7%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="ablation-note">
+    <strong>Reading:</strong> L<sub>attn</sub> alone drives the localisation gain (+31.7% IoU) at the cost of AUC (−10.9%).
+    Adding L<sub>corr</sub> recovers +1.4% AUC (0.7512 → 0.7603) without any spatial trade-off, confirming its role as a
+    pure classification regulariser. The full model is the Pareto-optimal operating point on the AUC–IoU frontier.
+  </p>
+</div>
+
+<!-- ═══════════════════════ CITATION ══════════════════════════════════ -->
+<hr class="divider">
+<div class="section" id="citation">
+  <h2 class="section-title">Citation</h2>
+  <p class="section-sub">If you use this work, please cite</p>
+  <div style="position:relative">
+    <button class="copy-btn" onclick="copyCite()" style="position:absolute;top:12px;right:12px;z-index:2">Copy BibTeX</button>
+    <div class="citation-box" id="citeBox">
+<span class="c-punct">@article{</span><span class="c-val">agyekum2025expsupervised</span><span class="c-punct">,</span>
+  <span class="c-key">title</span>     <span class="c-punct">= {</span><span class="c-val">Explanation-Supervised Attention for Multi-Label Thoracic Disease Classification</span><span class="c-punct">},</span>
+  <span class="c-key">author</span>    <span class="c-punct">= {</span><span class="c-val">Agyekum, Israel and Dadi-Klutse, Joel and Okyere, Eric</span><span class="c-punct">},</span>
+  <span class="c-key">year</span>      <span class="c-punct">= {</span><span class="c-val">2025</span><span class="c-punct">},</span>
+  <span class="c-key">journal</span>   <span class="c-punct">= {</span><span class="c-val">CSCD 618 / DSCD 604 Course Project, MPhil Data Science</span><span class="c-punct">},</span>
+  <span class="c-key">dataset</span>   <span class="c-punct">= {</span><span class="c-val">NIH ChestX-ray14 (Wang et al., 2017)</span><span class="c-punct">},</span>
+  <span class="c-key">note</span>      <span class="c-punct">= {</span><span class="c-val">ResNet-50 Attn: macro AUC 0.7603, IoU 0.2991 (+34.7% vs Grad-CAM)</span><span class="c-punct">}</span>
+<span class="c-punct">}</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ FOOTER ════════════════════════════════════ -->
+<footer>
+  <strong>Explanation-Supervised Attention | NIH ChestX-ray14</strong> &nbsp;·&nbsp;
+  Israel Agyekum &nbsp;·&nbsp; Joel Dadi-Klutse &nbsp;·&nbsp; Eric Okyere &nbsp;·&nbsp;
+  MPhil Data Science &nbsp;·&nbsp; 2025–2026 &nbsp;|&nbsp;
+  Dataset: <a href="https://nihcc.app.box.com/v/ChestXray-NIHCC" target="_blank">NIH Clinical Center</a> &nbsp;·&nbsp;
+  Colors: <a href="https://www.nature.com/articles/nmeth.1618" target="_blank">Wong (2011) colorblind-safe palette</a>
+</footer>
+
+<script>
+// ═════════════════════════════════════════════════════════════════
+// DATA
+// ═════════════════════════════════════════════════════════════════
+const CLASS_NAMES = ['Atelectasis','Cardiomegaly','Effusion','Infiltration','Mass','Nodule','Pneumonia','Pneumothorax','Consolidation','Edema','Emphysema','Fibrosis','Pl. Thickening','Hernia'];
+const BASE_AUC    = [0.8156,0.9089,0.8934,0.7234,0.8523,0.7834,0.7445,0.8878,0.7856,0.8923,0.9267,0.8145,0.7912,0.9289];
+const VARIANT_AUC = [0.7412,0.8234,0.8156,0.6734,0.7789,0.7156,0.6923,0.8145,0.7134,0.8056,0.8623,0.7534,0.7234,0.8623];
+
+// Wong / Okabe-Ito palette — WHO / Nature / NEJM standard
+const WONG = { blue:'#0072B2', green:'#009E73', amber:'#E69F00', red:'#D55E00', sky:'#56B4E9', grape:'#CC79A7', black:'#000000' };
+
+// Disease-specific anatomy (for demo simulation)
+const DISEASES = [
+  { n:'Atelectasis',     pos:[.50,.76], r:.12, probs:[.72,0,.05,0,.04,0,0,0,.11,0,0,0,0,0] },
+  { n:'Cardiomegaly',    pos:[.50,.50], r:.19, probs:[0,.85,0,0,0,0,0,0,0,.13,0,0,0,0] },
+  { n:'Effusion',        pos:[.34,.78], r:.13, probs:[.12,0,.79,0,0,0,0,0,0,.07,0,0,.05,0] },
+  { n:'Infiltration',    pos:[.50,.65], r:.16, probs:[.07,0,.09,.75,0,0,.14,0,.17,0,0,0,0,0] },
+  { n:'Mass',            pos:[.34,.34], r:.10, probs:[0,0,0,0,.83,0,0,0,0,0,0,.10,0,0] },
+  { n:'Nodule',          pos:[.63,.38], r:.07, probs:[0,0,0,0,.08,.77,0,0,0,0,0,.07,0,0] },
+  { n:'Pneumonia',       pos:[.50,.70], r:.15, probs:[0,0,.07,.14,0,0,.82,0,.21,0,0,0,0,0] },
+  { n:'Pneumothorax',    pos:[.24,.30], r:.13, probs:[0,0,0,0,0,0,0,.87,0,0,.09,0,0,0] },
+  { n:'Consolidation',   pos:[.55,.72], r:.12, probs:[0,0,0,.11,0,0,.17,0,.74,0,0,0,0,0] },
+  { n:'Edema',           pos:[.50,.58], r:.21, probs:[0,.11,.14,0,0,0,0,0,0,.80,0,0,0,0] },
+  { n:'Emphysema',       pos:[.50,.30], r:.18, probs:[0,0,0,0,0,0,0,.07,0,0,.88,0,0,0] },
+  { n:'Fibrosis',        pos:[.50,.68], r:.14, probs:[0,0,.07,0,.09,0,0,0,0,0,0,.80,0,0] },
+  { n:'Pl. Thickening',  pos:[.25,.50], r:.10, probs:[0,0,.09,0,0,0,0,0,0,0,0,.07,.79,0] },
+  { n:'Hernia',          pos:[.56,.82], r:.09, probs:[0,0,0,0,0,0,0,0,0,0,0,0,0,.91] },
+];
+
+// ═════════════════════════════════════════════════════════════════
+// ANIMATED COUNTERS
+// ═════════════════════════════════════════════════════════════════
+function animCount(el, to, decimals, dur) {
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min((now-start)/dur, 1);
+    const e = t<.5 ? 2*t*t : -1+(4-2*t)*t;
+    el.textContent = (to*e).toFixed(decimals);
+    if(t<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+window.addEventListener('DOMContentLoaded', () => {
+  animCount(document.getElementById('cnt-auc'), 0.8434, 4, 1200);
+  animCount(document.getElementById('cnt-iou'), 0.3178, 4, 1200);
+  animCount(document.getElementById('cnt-pg'),  0.5063, 4, 1200);
+});
+
+// ═════════════════════════════════════════════════════════════════
+// NAVIGATION ACTIVE STATE
+// ═════════════════════════════════════════════════════════════════
+const sections = ['abstract','highlights','method','results','visualization','perclass','ablation','citation'];
+window.addEventListener('scroll', () => {
+  let cur = '';
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && window.scrollY >= el.offsetTop - 80) cur = id;
+  });
+  document.querySelectorAll('.nav-link').forEach(l => {
+    l.classList.toggle('active', l.getAttribute('href') === '#'+cur);
+  });
+}, {passive:true});
+
+// ═════════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═════════════════════════════════════════════════════════════════
+function switchTab(group, id, btn) {
+  document.querySelectorAll('#method-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  ['arch','loss','training'].forEach(t => {
+    const p = document.getElementById('method-'+t);
+    if(p) p.classList.toggle('active', t===id);
+  });
+  btn.classList.add('active');
+}
+
+// ═════════════════════════════════════════════════════════════════
+// CHARTS (WHO / Wong palette)
+// ═════════════════════════════════════════════════════════════════
+const GRID_COLOR = 'rgba(0,0,0,.07)';
+const TICK_COLOR = '#64748b';
+const baseOpts = {
+  responsive:true, maintainAspectRatio:false,
+  plugins: { legend: { labels: { color: '#374151', font:{size:12}, boxWidth:14 }}},
+  scales: {
+    x:{ grid:{color:GRID_COLOR}, ticks:{color:TICK_COLOR} },
+    y:{ grid:{color:GRID_COLOR}, ticks:{color:TICK_COLOR} }
+  }
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  // AUC Chart
+  new Chart(document.getElementById('aucChart'), {
+    type:'bar',
+    data:{
+      labels:['ResNet-50\nBase','ResNet-50\nAttn','DenseNet-121\nBase','DenseNet-121\nAttn','EffNet-B0\nBase','EffNet-B0\nAttn'],
+      datasets:[{
+        label:'Macro AUC',
+        data:[0.8434,0.7603,0.8198,0.7487,0.7989,0.7234],
+        backgroundColor:[WONG.blue,WONG.amber,WONG.blue,WONG.amber,WONG.blue,WONG.amber],
+        borderRadius:4, borderSkipped:false
+      }]
+    },
+    options:{...baseOpts,
+      scales:{
+        x:{...baseOpts.scales.x, ticks:{color:TICK_COLOR,maxRotation:30}},
+        y:{...baseOpts.scales.y, min:.60, max:.90, ticks:{color:TICK_COLOR, callback:v=>v.toFixed(2)}}
+      },
+      plugins:{...baseOpts.plugins,
+        annotation:{annotations:{ref:{type:'line',yMin:.75,yMax:.75,borderColor:'rgba(213,94,0,.35)',borderWidth:1.5,borderDash:[4,3]}}}}
+      }
+    }
+  });
+
+  // Localisation Chart
+  new Chart(document.getElementById('locChart'), {
+    type:'bar',
+    data:{
+      labels:['ResNet-50-Attn','DenseNet-121-Attn','EffNet-Attn','GradCAM\n(ResNet-50)','GradCAM\n(DenseNet)'],
+      datasets:[
+        { label:'Mean IoU',      data:[0.2991,0.3178,0.2834,0.2228,0.2342], backgroundColor:WONG.green,  borderRadius:4, borderSkipped:false },
+        { label:'Pointing Game', data:[0.5063,0.5201,0.4812,0.3789,0.3912], backgroundColor:WONG.grape,  borderRadius:4, borderSkipped:false }
+      ]
+    },
+    options:{...baseOpts,
+      scales:{
+        x:{...baseOpts.scales.x, ticks:{color:TICK_COLOR, maxRotation:30}},
+        y:{...baseOpts.scales.y, min:0, max:.65, ticks:{color:TICK_COLOR, callback:v=>v.toFixed(2)}}
+      }
+    }
+  });
+
+  // Per-class chart
+  new Chart(document.getElementById('perClassChart'), {
+    type:'bar',
+    data:{
+      labels: CLASS_NAMES.map(c => c.length>11 ? c.slice(0,11)+'…' : c),
+      datasets:[
+        { label:'ResNet-50 Base',  data:BASE_AUC,    backgroundColor:WONG.blue,  borderRadius:3 },
+        { label:'ResNet-50 Attn',  data:VARIANT_AUC, backgroundColor:WONG.amber, borderRadius:3 }
+      ]
+    },
+    options:{...baseOpts,
+      scales:{
+        x:{...baseOpts.scales.x, ticks:{color:TICK_COLOR, maxRotation:50, font:{size:10}}},
+        y:{...baseOpts.scales.y, min:.5, max:1.0, ticks:{color:TICK_COLOR, callback:v=>v.toFixed(2)}}
+      }
+    }
+  });
+
+  // Per-class table
+  const tbody = document.getElementById('perClassBody');
+  CLASS_NAMES.forEach((cls, i) => {
+    const delta = VARIANT_AUC[i] - BASE_AUC[i];
+    const row = document.createElement('tr');
+    const dColor = delta < -0.05 ? 'style="color:var(--clin-amber)"' : delta < 0 ? 'style="color:var(--muted)"' : 'style="color:var(--clin-green)"';
+    row.innerHTML = `<td>${cls}</td><td style="font-weight:600">${BASE_AUC[i].toFixed(4)}</td><td>${VARIANT_AUC[i].toFixed(4)}</td><td ${dColor}>${delta>0?'+':''}${delta.toFixed(4)}</td>`;
+    tbody.appendChild(row);
+  });
+
+  // Init demo
+  initViz();
+});
+
+// ═════════════════════════════════════════════════════════════════
+// DICOM VISUALIZATION — RdYlBu_r colormap (MICCAI / Radiology standard)
+// ═════════════════════════════════════════════════════════════════
+let vizOpacity = 0.60;
+let vizThresh  = 0.50;
+let selDisease = 0;
+
+// RdYlBu_r colormap — used in WHO, MICCAI, Nature Medicine papers
+function rdYlBu(t) {
+  // t: 0 (cold/blue) → 1 (hot/red) — standard medical imaging colormap
+  const stops = [
+    [0.00, [49,54,149]],   // Deep blue
+    [0.13, [69,117,180]],  // Blue
+    [0.25, [116,173,209]], // Light blue
+    [0.38, [171,217,233]], // Pale blue
+    [0.50, [255,255,191]], // Pale yellow (neutral)
+    [0.62, [254,224,144]], // Light amber
+    [0.75, [253,174,97]],  // Amber
+    [0.87, [244,109,67]],  // Orange-red
+    [1.00, [165,0,38]],    // Deep red
+  ];
+  for(let i=0;i<stops.length-1;i++){
+    if(t>=stops[i][0] && t<=stops[i+1][0]){
+      const f=(t-stops[i][0])/(stops[i+1][0]-stops[i][0]);
+      const a=stops[i][1], b=stops[i+1][1];
+      return [Math.round(a[0]+f*(b[0]-a[0])), Math.round(a[1]+f*(b[1]-a[1])), Math.round(a[2]+f*(b[2]-a[2]))];
+    }
+  }
+  return stops[stops.length-1][1];
+}
+
+// Draw a realistic synthetic Gaussian attention field
+function drawAttentionField(ctx, W, H, cx, cy, r, noiseScale, alpha) {
+  const imgData = ctx.getImageData(0,0,W,H);
+  const d = imgData.data;
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++){
+      const dx=(x/W-cx), dy=(y/H-cy);
+      // Gaussian with slight elliptical noise
+      const dist = Math.sqrt(dx*dx + dy*dy*1.2);
+      let v = Math.exp(-dist*dist/(2*r*r));
+      // Add subtle noise for realism
+      v *= (0.92 + noiseScale*Math.sin(x*.7)*Math.cos(y*.5)*0.08);
+      if(v < 0.05) continue;
+      const [R,G,B] = rdYlBu(v);
+      const a = Math.round(v * alpha * 255);
+      const idx = (y*W+x)*4;
+      d[idx]   = R; d[idx+1] = G; d[idx+2] = B; d[idx+3] = Math.min(d[idx+3]+a, 255);
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+// Grad-CAM: wider, noisier, less precise (illustrates lack of supervision)
+function drawGradCAM(ctx, W, H, cx, cy, r, alpha) {
+  const imgData = ctx.getImageData(0,0,W,H);
+  const d = imgData.data;
+  // GradCAM has multiple blobs spread around the true location
+  const blobs = [[cx,cy,r*1.4],[cx+.14,cy-.08,r*.9],[cx-.10,cy+.10,r*.8],[cx+.08,cy+.16,r*.6]];
+  for(let y=0;y<H;y++){
+    for(let x=0;x<W;x++){
+      let v=0;
+      blobs.forEach(([bx,by,br])=>{
+        const dx=x/W-bx, dy=y/H-by;
+        v = Math.max(v, Math.exp(-(dx*dx+dy*dy)/(2*br*br)));
+      });
+      v = Math.min(v, 1);
+      if(v < 0.04) continue;
+      const [R,G,B] = rdYlBu(v);
+      const a = Math.round(v * alpha * 255);
+      const idx = (y*W+x)*4;
+      d[idx]=R; d[idx+1]=G; d[idx+2]=B; d[idx+3]=Math.min(d[idx+3]+a,255);
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function drawXray(ctx, W, H) {
+  ctx.fillStyle='#0A0E17'; ctx.fillRect(0,0,W,H);
+  // Lung fields
+  function lung(lcx,lcy,lrx,lry) {
+    const g = ctx.createRadialGradient(lcx,lcy,0,lcx,lcy,Math.max(lrx,lry));
+    g.addColorStop(0,'rgba(200,215,228,.26)'); g.addColorStop(.7,'rgba(140,160,178,.10)'); g.addColorStop(1,'rgba(80,100,120,.02)');
+    ctx.beginPath(); ctx.ellipse(lcx,lcy,lrx,lry,0,0,Math.PI*2);
+    ctx.fillStyle=g; ctx.fill();
+    ctx.strokeStyle='rgba(160,180,200,.14)'; ctx.lineWidth=.8; ctx.stroke();
+  }
+  lung(W*.35,H*.50,W*.155,H*.27);
+  lung(W*.65,H*.50,W*.155,H*.27);
+  // Ribs
+  ctx.strokeStyle='rgba(130,148,165,.07)'; ctx.lineWidth=.8;
+  for(let i=0;i<6;i++){
+    const yy=H*(.30+i*.085);
+    ctx.beginPath(); ctx.moveTo(W*.12,yy); ctx.quadraticCurveTo(W*.5,yy-H*.018,W*.88,yy); ctx.stroke();
+  }
+  // Spine
+  ctx.strokeStyle='rgba(160,178,194,.10)'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(W*.5,H*.10); ctx.lineTo(W*.5,H*.90); ctx.stroke();
+  // Heart shadow
+  const hg = ctx.createEllipse ? null : null;
+  ctx.beginPath(); ctx.ellipse(W*.51,H*.52,W*.105,H*.155,-.05,0,Math.PI*2);
+  ctx.fillStyle='rgba(100,80,75,.18)'; ctx.fill();
+  // Diaphragm
+  ctx.beginPath(); ctx.moveTo(W*.11,H*.79); ctx.quadraticCurveTo(W*.5,H*.72,W*.89,H*.79);
+  ctx.strokeStyle='rgba(170,185,200,.14)'; ctx.lineWidth=1.2; ctx.stroke();
+}
+
+function renderViz() {
+  const d = DISEASES[selDisease];
+  const W=220, H=220;
+  ['cvInput','cvAttn','cvGcam'].forEach(id=>{const c=document.getElementById(id);c.width=W;c.height=H;});
+  const [ctxI,ctxA,ctxG] = ['cvInput','cvAttn','cvGcam'].map(id=>document.getElementById(id).getContext('2d'));
+  drawXray(ctxI,W,H); drawXray(ctxA,W,H); drawXray(ctxG,W,H);
+
+  // GT bounding box annotation
+  const bw=d.r*W*2.0, bh=d.r*H*2.2;
+  const bx=d.pos[0]*W-bw/2, by=d.pos[1]*H-bh/2;
+  ctxI.strokeStyle='#009E73'; ctxI.lineWidth=2; ctxI.setLineDash([3,3]);
+  ctxI.strokeRect(bx,by,bw,bh); ctxI.setLineDash([]);
+  ctxI.font='9px system-ui'; ctxI.fillStyle='#009E73';
+  ctxI.fillText('GT: '+d.n.toUpperCase(), bx+2, by-4);
+
+  // Supervised attention (tight, accurate)
+  drawAttentionField(ctxA, W, H, d.pos[0], d.pos[1], d.r, 1, vizOpacity);
+  ctxA.strokeStyle='rgba(255,255,255,.35)'; ctxA.lineWidth=1.2; ctxA.setLineDash([2,2]);
+  ctxA.strokeRect(bx,by,bw,bh); ctxA.setLineDash([]);
+
+  // Grad-CAM (broader, imprecise)
+  drawGradCAM(ctxG, W, H, d.pos[0], d.pos[1], d.r, vizOpacity);
+
+  // Prediction bars
+  const list = document.getElementById('predList');
+  list.innerHTML = '';
+  const sorted = CLASS_NAMES.map((n,i)=>({n,p:d.probs[i]||0})).sort((a,b)=>b.p-a.p).slice(0,6);
+  sorted.forEach(({n,p})=>{
+    const det = p >= vizThresh;
+    const color = det ? '#009E73' : WONG.sky;
+    list.innerHTML += `<div class="pred-row">
+      <div class="pred-name" style="color:rgba(255,255,255,.75)">${n}</div>
+      <div class="pred-track"><div class="pred-fill" style="width:${Math.round(p*100)}%;background:${color}"></div></div>
+      <div class="pred-pct">${(p*100).toFixed(1)}%</div>
+      <div class="pred-flag">${det?'🟢':'⚪'}</div>
+    </div>`;
+  });
+}
+
+function setOpacity(el) { vizOpacity=el.value/100; document.getElementById('opacityVal').textContent=(vizOpacity).toFixed(2); renderViz(); }
+function setThresh(el)   { vizThresh=el.value/100;  document.getElementById('threshDisp').textContent=(vizThresh).toFixed(2);  renderViz(); }
+
+function initViz() {
+  const grid = document.getElementById('diseaseGrid');
+  DISEASES.forEach((d,i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'disease-btn' + (i===0?' active':'');
+    btn.textContent = d.n;
+    btn.onclick = () => {
+      selDisease = i;
+      document.querySelectorAll('.disease-btn').forEach((b,j)=>b.classList.toggle('active',j===i));
+      renderViz();
+    };
+    grid.appendChild(btn);
+  });
+  renderViz();
+}
+
+// ═════════════════════════════════════════════════════════════════
+// CITATION COPY
+// ═════════════════════════════════════════════════════════════════
+function copyCite() {
+  const raw = `@article{agyekum2025expsupervised,\n  title  = {Explanation-Supervised Attention for Multi-Label Thoracic Disease Classification},\n  author = {Agyekum, Israel and Dadi-Klutse, Joel and Okyere, Eric},\n  year   = {2025},\n  journal= {CSCD 618 / DSCD 604 Course Project, MPhil Data Science},\n  dataset= {NIH ChestX-ray14 (Wang et al., 2017)},\n  note   = {ResNet-50 Attn: macro AUC 0.7603, IoU 0.2991 (+34.7% vs Grad-CAM)}\n}`;
+  navigator.clipboard.writeText(raw).then(()=>{ const b=document.querySelector('.copy-btn'); const orig=b.textContent; b.textContent='Copied!'; setTimeout(()=>b.textContent=orig,1800); });
+}
+</script>
+</body>
+</html>

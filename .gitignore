@@ -1,0 +1,44 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Model checkpoints (large — stored on Google Drive) ────────────────────────
+outputs/checkpoints/
+*.pt
+*.pth
+*.ckpt
+
+# ── Dataset images (too large for GitHub — use NIH ChestX-ray14 download) ─────
+data/images/
+images/
+
+# ── Jupyter notebook checkpoints ──────────────────────────────────────────────
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# ── Environment ───────────────────────────────────────────────────────────────
+.env
+.venv/
+venv/
+env/
+*.env
+
+# ── OS / Editor ───────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ── Training logs (can be large) ──────────────────────────────────────────────
+outputs/logs/
+
+# ── Temporary files ───────────────────────────────────────────────────────────
+*.tmp
+*.log

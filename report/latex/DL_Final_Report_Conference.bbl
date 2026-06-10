@@ -1,0 +1,67 @@
+\begin{thebibliography}{8}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Hasan and Bhatt(2024)]{hydravit2024}
+M.~M. Hasan and U.~Bhatt.
+\newblock {HydraViT}: Adaptive multi-branch transformer for multi-label disease
+  classification from chest {X}-ray images.
+\newblock \emph{Biomedical Signal Processing and Control}, 97:\penalty0 106700,
+  2024.
+
+\bibitem[Holste et~al.(2022)Holste, Wang, Jiang, Shen, Shih, Summers, Peng, and
+  Wang]{holste2022}
+G.~Holste, S.~Wang, Z.~Jiang, T.~C. Shen, G.~Shih, R.~M. Summers, Y.~Peng, and
+  Z.~Wang.
+\newblock Long-tailed classification of thorax diseases on chest {X}-ray: A new
+  benchmark study.
+\newblock In \emph{ECCV Workshop on Distributed, Collaborative and Federated
+  Learning, and Affordable AI and Healthcare (DALI)}, pages 22--38, 2022.
+
+\bibitem[Lanfredi et~al.(2023)Lanfredi, Schroeder, and Tasdizen]{lanfredi2023}
+R.~B. Lanfredi, J.~D. Schroeder, and T.~Tasdizen.
+\newblock Localization supervision of chest {X}-ray classifiers using
+  label-specific eye-tracking annotation.
+\newblock \emph{Frontiers in Radiology}, 3:\penalty0 1088068, 2023.
+
+\bibitem[Rajpurkar et~al.(2017)Rajpurkar, Irvin, Zhu, Yang, Mehta, Duan, Ding,
+  Bagul, Langlotz, Shpanskaya, Lungren, and Ng]{chexnet2017}
+P.~Rajpurkar, J.~Irvin, K.~Zhu, B.~Yang, H.~Mehta, T.~Duan, D.~Ding, A.~Bagul,
+  C.~Langlotz, K.~Shpanskaya, M.~P. Lungren, and A.~Y. Ng.
+\newblock {CheXNet}: Radiologist-level pneumonia detection on chest {X}-rays
+  with deep learning.
+\newblock \emph{arXiv preprint arXiv:1711.05225}, 2017.
+
+\bibitem[Rao et~al.(2023)Rao, Boehle, Parchami-Araghi, and Schiele]{rao2023}
+S.~Rao, M.~Boehle, A.~Parchami-Araghi, and B.~Schiele.
+\newblock Studying how to efficiently and effectively guide models with
+  explanations.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision (ICCV)}, 2023.
+
+\bibitem[Ridnik et~al.(2021)Ridnik, Ben-Baruch, Zamir, Noy, Friedman, Protter,
+  and Zelnik-Manor]{asl2021}
+T.~Ridnik, E.~Ben-Baruch, N.~Zamir, A.~Noy, I.~Friedman, M.~Protter, and
+  L.~Zelnik-Manor.
+\newblock Asymmetric loss for multi-label classification.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision (ICCV)}, pages 82--91, 2021.
+
+\bibitem[Sun et~al.(2023)Sun, Woerner, Maier, Koch, and
+  Wachinger]{attrinet2023}
+S.~Sun, S.~Woerner, A.~Maier, L.~M. Koch, and C.~Wachinger.
+\newblock Inherently interpretable multi-label classification using
+  class-specific counterfactuals.
+\newblock In \emph{Proceedings of Machine Learning for Health (ML4H)}, 2023.
+
+\bibitem[Wang et~al.(2017)Wang, Peng, Lu, Lu, Bagheri, and
+  Summers]{wang2017chestxray}
+X.~Wang, Y.~Peng, L.~Lu, Z.~Lu, M.~Bagheri, and R.~M. Summers.
+\newblock {ChestX-ray14}: Hospital-scale chest {X}-ray database and benchmarks.
+\newblock In \emph{Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition (CVPR)}, pages 2097--2106, 2017.
+
+\end{thebibliography}

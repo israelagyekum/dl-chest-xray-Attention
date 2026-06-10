@@ -1,0 +1,130 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\@writefile{toc}{\contentsline {section}{Abstract}{1}{Doc-Start}\protected@file@percent }
+\citation{attrinet2023}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{3}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Research Questions}{3}{subsection.1.1}\protected@file@percent }
+\citation{convnext2022}
+\citation{swin2021}
+\citation{efficientnetv2}
+\citation{holste2022}
+\citation{holste2022}
+\citation{asl2021}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Contributions}{4}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{4}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}CNN Backbones for Medical Imaging}{4}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Multi-Label Classification on ChestX-ray14}{4}{subsection.2.2}\protected@file@percent }
+\citation{clarity2025}
+\citation{chefer2021}
+\citation{attrinet2023}
+\citation{rao2023}
+\citation{lanfredi2023}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Attention Mechanisms}{5}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Post-Hoc Explanation Methods}{5}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Right-for-the-Right-Reasons Training}{5}{subsection.2.5}\protected@file@percent }
+\citation{hydravit2024}
+\citation{holste2022}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}Label Dependency Modelling}{6}{subsection.2.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Methodology}{6}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Dataset}{6}{subsection.3.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:class_dist}{{1a}{7}{Per-class label frequency (training set). Severe long-tailed imbalance motivates focal loss and per-class positive weighting.\relax }{figure.caption.1}{}}
+\newlabel{sub@fig:class_dist}{{a}{7}{Per-class label frequency (training set). Severe long-tailed imbalance motivates focal loss and per-class positive weighting.\relax }{figure.caption.1}{}}
+\newlabel{fig:split_dist}{{1b}{7}{Patient-level split distribution across train / validation / test. Stratified sampling preserves the class ratio in each split.\relax }{figure.caption.1}{}}
+\newlabel{sub@fig:split_dist}{{b}{7}{Patient-level split distribution across train / validation / test. Stratified sampling preserves the class ratio in each split.\relax }{figure.caption.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces NIH ChestX-ray14 dataset statistics used in this work.\relax }}{7}{figure.caption.1}\protected@file@percent }
+\newlabel{fig:dataset_stats}{{1}{7}{NIH ChestX-ray14 dataset statistics used in this work.\relax }{figure.caption.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Model Architecture}{7}{subsection.3.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces End-to-end model architecture. $\mathbf  {F}\!\in \!\mathbb  {R}^{C\times 7\times 7}$: backbone feature map ($G{=}7$ at $224^2$ input). $\mathbf  {A}_c$: CBAM channel attention vector. $\mathbf  {A}_s\!\in \!(0,1)^{7\times 7}$: supervised spatial attention map (core contribution). $\mathbf  {M}_{\text  {box}}$: binary bbox mask supervising $\mathbf  {A}_s$ via $\mathcal  {L}_{\text  {attn}}$. Dashed arrows: back-propagation paths. Orange arrow: spatial supervision signal.\relax }}{7}{figure.caption.2}\protected@file@percent }
+\newlabel{fig:arch}{{2}{7}{End-to-end model architecture. $\mathbf {F}\!\in \!\mathbb {R}^{C\times 7\times 7}$: backbone feature map ($G{=}7$ at $224^2$ input). $\mathbf {A}_c$: CBAM channel attention vector. $\mathbf {A}_s\!\in \!(0,1)^{7\times 7}$: supervised spatial attention map (core contribution). $\mathbf {M}_{\text {box}}$: binary bbox mask supervising $\mathbf {A}_s$ via $\mathcal {L}_{\text {attn}}$. Dashed arrows: back-propagation paths. Orange arrow: spatial supervision signal.\relax }{figure.caption.2}{}}
+\citation{asl2021}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.1}CNN Backbone}{8}{subsubsection.3.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.2}Channel Attention (Optional)}{8}{subsubsection.3.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.3}Supervised Spatial Attention Module}{8}{subsubsection.3.2.3}\protected@file@percent }
+\newlabel{eq:attn}{{2}{8}{Supervised Spatial Attention Module}{equation.3.2}{}}
+\newlabel{eq:gated}{{3}{8}{Supervised Spatial Attention Module}{equation.3.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.4}Classifier Head}{8}{subsubsection.3.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Loss Function}{8}{subsection.3.3}\protected@file@percent }
+\newlabel{sec:loss}{{3.3}{8}{Loss Function}{subsection.3.3}{}}
+\newlabel{eq:total_loss}{{4}{8}{Loss Function}{equation.3.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.1}Classification Loss ($\mathcal  {L}_{\text  {cls}}$)}{9}{subsubsection.3.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.2}Attention Loss ($\mathcal  {L}_{\text  {attn}}$)}{9}{subsubsection.3.3.2}\protected@file@percent }
+\newlabel{sec:loss_attn}{{3.3.2}{9}{Attention Loss ($\mathcal {L}_{\text {attn}}$)}{subsubsection.3.3.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.3.3}Label-Correlation Loss ($\mathcal  {L}_{\text  {corr}}$)}{9}{subsubsection.3.3.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Empirical label co-occurrence matrix computed from the training split of NIH ChestX-ray14. Cell $(i,j)$ reports the fraction of images with label\nobreakspace  {}$i$ that also carry label\nobreakspace  {}$j$. High co-occurrence pairs (e.g.\ Effusion--Atelectasis, Consolidation--Infiltration) inform the penalty weights in $\mathcal  {L}_{\text  {corr}}$.\relax }}{10}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:cooc}{{3}{10}{Empirical label co-occurrence matrix computed from the training split of NIH ChestX-ray14. Cell $(i,j)$ reports the fraction of images with label~$i$ that also carry label~$j$. High co-occurrence pairs (e.g.\ Effusion--Atelectasis, Consolidation--Infiltration) inform the penalty weights in $\mathcal {L}_{\text {corr}}$.\relax }{figure.caption.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Training Protocol}{10}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Experimental Setup}{10}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Model Configurations}{10}{subsection.4.1}\protected@file@percent }
+\citation{varoquaux2022}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Seven experimental configurations. Ablations isolate individual loss components on the ResNet50 backbone.\relax }}{11}{table.caption.4}\protected@file@percent }
+\newlabel{tab:configs}{{1}{11}{Seven experimental configurations. Ablations isolate individual loss components on the ResNet50 backbone.\relax }{table.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Evaluation Metrics}{11}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.1}Classification}{11}{subsubsection.4.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.2}Localisation}{11}{subsubsection.4.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Compute}{11}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Results}{12}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Classification Performance}{12}{subsection.5.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Classification results. DeLong $p$-value is the minimum across 14 classes, relative to the corresponding backbone baseline. `---' indicates no paired test is applicable.\relax }}{12}{table.caption.5}\protected@file@percent }
+\newlabel{tab:classification}{{2}{12}{Classification results. DeLong $p$-value is the minimum across 14 classes, relative to the corresponding backbone baseline. `---' indicates no paired test is applicable.\relax }{table.caption.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Localisation Performance}{12}{subsection.5.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Localisation evaluation on annotated test images. Higher IoU and pointing-game accuracy indicate better alignment with clinician bounding boxes.\relax }}{12}{table.caption.6}\protected@file@percent }
+\newlabel{tab:localisation}{{3}{12}{Localisation evaluation on annotated test images. Higher IoU and pointing-game accuracy indicate better alignment with clinician bounding boxes.\relax }{table.caption.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Quantitative localisation comparison: mean IoU (left) and pointing-game accuracy (right) for supervised attention variants versus post-hoc Grad-CAM baselines. All attention variants outperform their corresponding Grad-CAM counterpart on IoU; ResNet50-Attn achieves the best pointing-game accuracy (0.506).\relax }}{13}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:loc_compare}{{4}{13}{Quantitative localisation comparison: mean IoU (left) and pointing-game accuracy (right) for supervised attention variants versus post-hoc Grad-CAM baselines. All attention variants outperform their corresponding Grad-CAM counterpart on IoU; ResNet50-Attn achieves the best pointing-game accuracy (0.506).\relax }{figure.caption.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Ablation Study}{13}{subsection.5.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Ablation study on ResNet50. The full model (bottom row) achieves the best pointing-game accuracy; \mbox  {+$\mathcal  {L}_{\text  {attn}}$} alone achieves the highest IoU.\relax }}{13}{table.caption.8}\protected@file@percent }
+\newlabel{tab:ablation}{{4}{13}{Ablation study on ResNet50. The full model (bottom row) achieves the best pointing-game accuracy; \mbox {+$\mathcal {L}_{\text {attn}}$} alone achieves the highest IoU.\relax }{table.caption.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Training Curves and Qualitative Results}{14}{subsection.5.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Macro AUC comparison across all seven model configurations. ResNet50-Base achieves the highest macro AUC (0.843), while attention variants trade classification performance for improved localisation.\relax }}{14}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:auc_compare}{{5}{14}{Macro AUC comparison across all seven model configurations. ResNet50-Base achieves the highest macro AUC (0.843), while attention variants trade classification performance for improved localisation.\relax }{figure.caption.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Training loss and validation AUC curves for six of the seven model configurations. Attention variants exhibit slightly more volatile early-epoch training due to the additional attention and correlation loss signals.\relax }}{15}{figure.caption.10}\protected@file@percent }
+\newlabel{fig:training_curves}{{6}{15}{Training loss and validation AUC curves for six of the seven model configurations. Attention variants exhibit slightly more volatile early-epoch training due to the additional attention and correlation loss signals.\relax }{figure.caption.10}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Per-class ROC curves for ResNet50-Base (macro AUC\nobreakspace  {}=\nobreakspace  {}0.843), the best-performing model. Cardiomegaly, Emphysema, and Hernia achieve the highest individual AUC; Infiltration remains the most challenging class (AUC\nobreakspace  {}=\nobreakspace  {}0.692).\relax }}{16}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:roc}{{7}{16}{Per-class ROC curves for ResNet50-Base (macro AUC~=~0.843), the best-performing model. Cardiomegaly, Emphysema, and Hernia achieve the highest individual AUC; Infiltration remains the most challenging class (AUC~=~0.692).\relax }{figure.caption.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces \small  Qualitative localisation on six NIH ChestX-ray14 test images. Col\nobreakspace  {}1: input radiograph. Col\nobreakspace  {}2: supervised attention $\mathbf  {A}_s$ (ours, blue). Col\nobreakspace  {}3: Grad-CAM baseline (red). Col\nobreakspace  {}4: clinician ground-truth box (green). Supervised attention maps align more closely with annotated disease regions.\relax }}{17}{figure.caption.12}\protected@file@percent }
+\newlabel{fig:localization}{{8}{17}{\small Qualitative localisation on six NIH ChestX-ray14 test images. Col~1: input radiograph. Col~2: supervised attention $\mathbf {A}_s$ (ours, blue). Col~3: Grad-CAM baseline (red). Col~4: clinician ground-truth box (green). Supervised attention maps align more closely with annotated disease regions.\relax }{figure.caption.12}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Discussion}{18}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Classification vs Localisation Trade-off}{18}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Localisation Faithfulness}{18}{subsection.6.2}\protected@file@percent }
+\newlabel{sec:loc_faith}{{6.2}{18}{Localisation Faithfulness}{subsection.6.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Ablation Insights}{18}{subsection.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.4}Backbone Comparison}{19}{subsection.6.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.5}Limitations}{19}{subsection.6.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Conclusion}{19}{section.7}\protected@file@percent }
+\bibstyle{abbrvnat}
+\bibdata{references}
+\bibcite{chefer2021}{{1}{2021}{{Chefer et~al.}}{{Chefer, Gur, and Wolf}}}
+\bibcite{hydravit2024}{{2}{2024}{{Hasan and Bhatt}}{{}}}
+\bibcite{holste2022}{{3}{2022}{{Holste et~al.}}{{Holste, Wang, Jiang, Shen, Shih, Summers, Peng, and Wang}}}
+\bibcite{clarity2025}{{4}{2025}{{Khader et~al.}}{{Khader, Mueller-Franzes, Arasteh, Han, Haarburger, Schulze-Hagen, Schad, Engelhardt, Nebelung, Kather, and Truhn}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Future Work}{20}{subsection.7.1}\protected@file@percent }
+\bibcite{lanfredi2023}{{5}{2023}{{Lanfredi et~al.}}{{Lanfredi, Schroeder, and Tasdizen}}}
+\bibcite{swin2021}{{6}{2021}{{Liu et~al.}}{{Liu, Lin, Cao, Hu, Wei, Zhang, Lin, and Guo}}}
+\bibcite{convnext2022}{{7}{2022}{{Liu et~al.}}{{Liu, Mao, Wu, Feichtenhofer, Darrell, and Xie}}}
+\bibcite{rao2023}{{8}{2023}{{Rao et~al.}}{{Rao, B{\"o}hle, Parchami-Araghi, and Schiele}}}
+\bibcite{asl2021}{{9}{2021}{{Ridnik et~al.}}{{Ridnik, Ben-Baruch, Zamir, Noy, Friedman, Protter, and Zelnik-Manor}}}
+\bibcite{attrinet2023}{{10}{2023}{{Sun et~al.}}{{Sun, Woerner, Maier, Koch, and Wachinger}}}
+\bibcite{efficientnetv2}{{11}{2021}{{Tan and Le}}{{}}}
+\bibcite{varoquaux2022}{{12}{2022}{{Varoquaux and Cheplygina}}{{}}}
+\@writefile{toc}{\contentsline {section}{\numberline {A}Full Per-Class ROC-AUC}{22}{appendix.A}\protected@file@percent }
+\newlabel{app:perclass}{{A}{22}{Full Per-Class ROC-AUC}{appendix.A}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Full per-class ROC-AUC for all 14 thoracic findings across the five main model configurations. Best value in each row is \textbf  {bold}.\relax }}{22}{table.caption.13}\protected@file@percent }
+\newlabel{tab:perclass}{{5}{22}{Full per-class ROC-AUC for all 14 thoracic findings across the five main model configurations. Best value in each row is \textbf {bold}.\relax }{table.caption.13}{}}
+\gdef \@abspage@last{23}

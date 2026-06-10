@@ -1,0 +1,98 @@
+# ============================================================
+# config.yaml  — single source of truth for all hyperparameters
+# Explanation-Supervised Attention for Thoracic Disease Classification
+# ============================================================
+# Usage:
+#   Local CPU smoke-test : sample_mode: true  (uses data/sample/)
+#   Kaggle full run       : sample_mode: false, device: "cuda"
+# ============================================================
+
+# --- Paths ---------------------------------------------------
+data_dir:       "data"
+sample_dir:     "data/sample"
+csv_entry:      "Data_Entry_2017.csv"
+csv_bbox:       "BBox_List_2017.csv"
+output_dir:     "outputs"
+checkpoint_dir: "outputs/checkpoints"
+log_dir:        "outputs/logs"
+figure_dir:     "outputs/figures"
+
+# --- Device / mode -------------------------------------------
+device:         "cpu"        # "cuda" on Kaggle
+sample_mode:    true         # true → use data/sample/; false → full dataset
+num_workers:    2            # dataloader workers (set 0 on Windows if issues)
+
+# --- Dataset -------------------------------------------------
+image_size:     224
+num_classes:    14
+
+# Class names (order matches label vector index 0-13)
+class_names:
+  - Atelectasis
+  - Cardiomegaly
+  - Effusion
+  - Infiltration
+  - Mass
+  - Nodule
+  - Pneumonia
+  - Pneumothorax
+  - Consolidation
+  - Edema
+  - Emphysema
+  - Fibrosis
+  - Pleural_Thickening
+  - Hernia
+
+# Classes that have bounding box annotations (8 of 14)
+bbox_classes:
+  - Atelectasis
+  - Cardiomegaly
+  - Effusion
+  - Infiltration
+  - Mass
+  - Nodule
+  - Pneumonia
+  - Pneumothorax
+
+# --- Split ---------------------------------------------------
+val_frac:       0.10
+test_frac:      0.10
+random_seed:    42
+
+# Class-balanced subset size (used when sample_mode: false)
+# Set to null to use the full dataset
+subset_size:    5000
+
+# --- Model ---------------------------------------------------
+backbone:          "resnet50"      # "resnet50" | "densenet121" | "efficientnet_b0"
+pretrained:        true
+attention_resolution: 7           # 7 (default) | 14 (ablation — finer localization)
+use_channel_attn:  true           # CBAM-style channel attention before spatial
+
+# --- Loss weights --------------------------------------------
+lambda1:        1.0    # weight for L_attn (explanation supervision)
+lambda2:        0.5    # weight for L_corr (label correlation)
+
+# Focal loss gamma (set 0.0 to use standard weighted BCE)
+focal_gamma:    2.0
+
+# L_attn components
+dice_weight:    1.0    # Dice loss weight in L_attn (on boxed images)
+mse_weight:     0.5    # MSE loss weight in L_attn (on boxed images)
+sparsity_weight: 0.01  # L1 sparsity weight in L_attn (on un-boxed images)
+
+# --- Training ------------------------------------------------
+epochs:         30
+batch_size:     32     # reduce to 16 on CPU smoke-test
+lr:             1.0e-4
+weight_decay:   1.0e-5
+scheduler:      "cosine"    # "cosine" | "step" | "none"
+warmup_epochs:  2
+grad_clip:      1.0         # max gradient norm (0 = disabled)
+mixed_precision: false      # true only with CUDA
+
+# --- Logging / checkpointing ---------------------------------
+log_interval:       50          # steps between console log
+val_interval:       1           # validate every N epochs
+checkpoint_metric:  "macro_auc" # metric to select best checkpoint
+early_stop_patience: 7          # epochs without improvement before stopping
