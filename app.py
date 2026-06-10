@@ -2,16 +2,14 @@
 app.py — Streamlit demo for Explanation-Supervised Attention
           on NIH ChestX-ray14
 
-Usage:
-    pip install streamlit Pillow torch torchvision
+Usage (local):
+    pip install -r requirements.txt
     streamlit run app.py
 
-Features:
-    • Upload a chest X-ray (or pick a sample)
-    • Select backbone + which checkpoint to load
-    • See 14-class probability bars
-    • Side-by-side: Input | GT box (if available) | Ours (supervised attn) | Grad-CAM
-    • Metrics summary (loaded from eval_results.json if it exists)
+Streamlit Cloud:
+    Add DRIVE_FOLDER_ID to app secrets (Settings → Secrets).
+    The app downloads checkpoints from your shared Google Drive folder
+    on first launch automatically.
 """
 
 import os
@@ -36,11 +34,15 @@ from src.data.splits import CLASS_NAMES
 from src.data.masks  import load_bbox_lookup, get_mask_for_image
 from src.models.model import build_model
 from src.gradcam     import GradCAM, get_gradcam_layer
+import src.gradcam as _gcam
+
+# Fix DenseNet Grad-CAM layer (norm5 has in-place op conflicts with backward hooks)
+_gcam.GRADCAM_LAYERS['densenet121'] = 'backbone.features.denseblock4'
 
 # ── Constants ────────────────────────────────────────────────────────────────
-IMAGENET_MEAN = (0.485, 0.456, 0.406)
-IMAGENET_STD  = (0.229, 0.224, 0.225)
-ATTN_CMAP     = LinearSegmentedColormap.from_list(
+IMAGENET_MEAN  = (0.485, 0.456, 0.406)
+IMAGENET_STD   = (0.229, 0.224, 0.225)
+ATTN_CMAP      = LinearSegmentedColormap.from_list(
     "attn", ["#000080", "#00FF00", "#FFFF00", "#FF0000"]
 )
 CHECKPOINT_DIR = os.path.join(ROOT, "outputs", "checkpoints")
@@ -54,12 +56,69 @@ BACKBONE_OPTIONS = {
     "EfficientNet-B0":  "efficientnet_b0",
 }
 
+CHECKPOINT_FILES = [
+    f"{bb}_{var}_best.pt"
+    for bb in ["resnet50", "densenet121", "efficientnet_b0"]
+    for var in ["attention", "baseline"]
+]
+
+
+# ── Google Drive checkpoint download ─────────────────────────────────────────
+
+def _get_drive_folder_id() -> str:
+    """Read Drive folder ID from Streamlit secrets or env var."""
+    try:
+        return st.secrets.get("DRIVE_FOLDER_ID", "")
+    except Exception:
+        return os.environ.get("DRIVE_FOLDER_ID", "")
+
+
+@st.cache_resource(show_spinner=False)
+def ensure_checkpoints():
+    """Download missing checkpoints from Google Drive (runs once per session)."""
+    os.makedirs(CHECKPOINT_DIR, exist_ok=True)
+    missing = [f for f in CHECKPOINT_FILES
+               if not os.path.exists(os.path.join(CHECKPOINT_DIR, f))]
+    if not missing:
+        return True
+
+    folder_id = _get_drive_folder_id()
+    if not folder_id:
+        st.warning(
+            "⚠ Model checkpoints not found locally and no `DRIVE_FOLDER_ID` secret set. "
+            "The app will run with **random weights** (predictions are meaningless). "
+            "Add your Google Drive folder ID to Streamlit secrets to load real models."
+        )
+        return False
+
+    try:
+        import gdown
+        with st.spinner(
+            f"⬇ Downloading {len(missing)} model checkpoint(s) from Google Drive "
+            "(first launch only — takes ~2 min)…"
+        ):
+            gdown.download_folder(
+                id=folder_id,
+                output=CHECKPOINT_DIR,
+                quiet=True,
+                use_cookies=False,
+            )
+        st.success("✓ Checkpoints downloaded successfully!")
+        return True
+    except Exception as e:
+        st.error(f"Download failed: {e}\nApp will run with random weights.")
+        return False
+
+
 # ── Page config ───────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Explanation-Supervised Attention — ChestX-ray14",
     page_icon="🫁",
     layout="wide",
 )
+
+# Download checkpoints on startup
+ensure_checkpoints()
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -72,8 +131,9 @@ def load_model_cached(backbone_name: str, ckpt_path: str, variant: bool):
     }
     model = build_model(cfg, cooc_matrix=None, variant=variant)
     if ckpt_path and os.path.exists(ckpt_path):
-        ckpt = torch.load(ckpt_path, map_location="cpu")
-        model.load_state_dict(ckpt["model"])
+        ckpt  = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+        state = ckpt.get("model", ckpt)
+        model.load_state_dict(state, strict=False)
         loaded = True
     else:
         loaded = False
@@ -99,7 +159,6 @@ def preprocess_image(pil_img: Image.Image) -> torch.Tensor:
 
 
 def denormalize(tensor: torch.Tensor) -> np.ndarray:
-    """Convert normalised tensor back to uint8 numpy image."""
     mean = torch.tensor(IMAGENET_MEAN).view(3, 1, 1)
     std  = torch.tensor(IMAGENET_STD).view(3, 1, 1)
     img  = tensor.squeeze(0) * std + mean
@@ -139,8 +198,10 @@ def render_gt_box(ax, img_np, gt_mask_7x7, title="Ground-truth box"):
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/NIH_logo.svg/200px-NIH_logo.svg.png",
-             width=80)
+    st.image(
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/NIH_logo.svg/200px-NIH_logo.svg.png",
+        width=80,
+    )
     st.title("Settings")
 
     backbone_label = st.selectbox("Backbone", list(BACKBONE_OPTIONS.keys()), index=0)
@@ -159,10 +220,10 @@ with st.sidebar:
     if ckpt_exists:
         st.success(f"✓ Checkpoint loaded: `{tag}`")
     else:
-        st.warning(f"⚠ No checkpoint found at `{tag}`. Using random weights (for demo only).")
+        st.warning(f"⚠ No checkpoint: `{tag}` — random weights.")
 
     thresh = st.slider("Prediction threshold", 0.1, 0.9, 0.5, 0.05)
-    alpha  = st.slider("Heatmap opacity", 0.2, 0.8, 0.45, 0.05)
+    alpha  = st.slider("Heatmap opacity",       0.2, 0.8, 0.45, 0.05)
 
     st.markdown("---")
     st.caption("**Explanation-Supervised Attention**\nCSCD 618 / DSCD 604\nIsrael Agyekum")
@@ -196,7 +257,7 @@ with col_sample:
         ["(none)"] + sample_files,
     )
 
-pil_img = None
+pil_img  = None
 image_id = None
 
 if uploaded:
@@ -214,26 +275,23 @@ if pil_img is not None:
     with torch.no_grad():
         logits, attn_map = model(x)
 
-    probs   = torch.sigmoid(logits).squeeze().numpy()          # (14,)
-    attn_np = attn_map.squeeze().numpy()                       # (7, 7)
-    attn_up = upsample_map(attn_np, 224)                       # (224, 224)
+    probs   = torch.sigmoid(logits).squeeze().numpy()
+    attn_np = attn_map.squeeze().numpy()
+    attn_up = upsample_map(attn_np, 224)
 
     # Grad-CAM (always from baseline for fair comparison)
-    base_cfg = {"backbone": backbone_name, "pretrained": False,
-                "num_classes": 14, "use_channel_attn": True}
-    base_ckpt = os.path.join(CHECKPOINT_DIR,
-                             f"{backbone_name}_baseline_best.pt")
+    base_ckpt  = os.path.join(CHECKPOINT_DIR, f"{backbone_name}_baseline_best.pt")
     base_model, _ = load_model_cached(backbone_name, base_ckpt, False)
-    layer  = get_gradcam_layer(backbone_name)
-    gcam   = GradCAM(base_model, layer)
-    top_cls = int(probs.argmax())
-    gcam_np = gcam(x, class_idx=top_cls, output_size=(224, 224)).squeeze()
+    layer      = get_gradcam_layer(backbone_name)
+    gcam       = GradCAM(base_model, layer)
+    top_cls    = int(probs.argmax())
+    gcam_np    = gcam(x, class_idx=top_cls, output_size=(224, 224)).squeeze()
     gcam.remove_hooks()
 
-    # GT mask (if image has a bounding box)
+    # GT mask
     gt_mask_7, has_box = get_mask_for_image(image_id or "", bbox_lookup, 7)
 
-    # ── Layout: heatmaps ─────────────────────────────────────────────────────
+    # ── Visualisation ────────────────────────────────────────────────────────
     st.markdown("---")
     st.subheader("Visualisation")
 
@@ -242,12 +300,10 @@ if pil_img is not None:
     for ax in axes:
         ax.set_facecolor("#0e1117")
 
-    # 1. Input
     axes[0].imshow(img_224)
     axes[0].set_title("Input X-ray", color="white", fontsize=11, fontweight="bold")
     axes[0].axis("off")
 
-    # 2. GT box (if available)
     if has_box:
         render_gt_box(axes[1], img_224, gt_mask_7, "Ground-truth box")
     else:
@@ -258,11 +314,8 @@ if pil_img is not None:
         axes[1].set_title("Ground-truth box", color="white", fontsize=11)
         axes[1].axis("off")
 
-    # 3. Supervised attention (ours)
     overlay_heatmap(axes[2], img_224, attn_up, alpha=alpha,
                     title="Ours — supervised attention")
-
-    # 4. Grad-CAM
     overlay_heatmap(axes[3], img_224, gcam_np, alpha=alpha,
                     title="Grad-CAM (baseline)")
 
@@ -280,17 +333,12 @@ if pil_img is not None:
     cols = st.columns(2)
     predictions = sorted(zip(CLASS_NAMES, probs), key=lambda x: -x[1])
     for i, (cls, prob) in enumerate(predictions):
-        col = cols[i % 2]
+        col     = cols[i % 2]
         detected = prob >= thresh
-        color    = "#FF4B4B" if detected else "#4B9EFF"
-        label    = f"{'🔴' if detected else '⚪'} {cls}"
-        col.markdown(
-            f"**{label}**",
-            unsafe_allow_html=True,
-        )
+        label   = f"{'🔴' if detected else '⚪'} {cls}"
+        col.markdown(f"**{label}**", unsafe_allow_html=True)
         col.progress(float(prob), text=f"{prob:.1%}")
 
-    # Top prediction highlight
     top_name = CLASS_NAMES[top_cls]
     top_prob = float(probs[top_cls])
     st.info(
@@ -298,29 +346,28 @@ if pil_img is not None:
         + (" ✓ Above threshold" if top_prob >= thresh else " — Below threshold")
     )
 
-    # ── Attention stats ───────────────────────────────────────────────────────
     with st.expander("Attention map details"):
         col1, col2, col3 = st.columns(3)
-        col1.metric("Attn min", f"{attn_np.min():.3f}")
-        col2.metric("Attn max", f"{attn_np.max():.3f}")
+        col1.metric("Attn min",  f"{attn_np.min():.3f}")
+        col2.metric("Attn max",  f"{attn_np.max():.3f}")
         col3.metric("Attn mean", f"{attn_np.mean():.3f}")
 
         fig2, axes2 = plt.subplots(1, 2, figsize=(8, 3))
         im1 = axes2[0].imshow(attn_np, cmap=ATTN_CMAP, vmin=0, vmax=1)
-        axes2[0].set_title("Attention map (7×7)"); axes2[0].axis("off")
+        axes2[0].set_title("Attention map (7×7)")
+        axes2[0].axis("off")
         plt.colorbar(im1, ax=axes2[0], fraction=0.046)
-        im2 = axes2[1].imshow(gcam_np.reshape(
-            int(gcam_np.size**0.5), -1) if gcam_np.ndim == 1 else gcam_np.reshape(7, -1)[:7, :7]
-            if gcam_np.shape[0] > 7 else gcam_np[:7, :7],
-            cmap=ATTN_CMAP, vmin=0, vmax=1)
-        axes2[1].set_title("Grad-CAM (7×7)"); axes2[1].axis("off")
+        gcam_small = gcam_np[:7, :7] if gcam_np.shape[0] >= 7 else gcam_np
+        im2 = axes2[1].imshow(gcam_small, cmap=ATTN_CMAP, vmin=0, vmax=1)
+        axes2[1].set_title("Grad-CAM (7×7)")
+        axes2[1].axis("off")
         plt.colorbar(im2, ax=axes2[1], fraction=0.046)
         plt.tight_layout()
         st.pyplot(fig2)
         plt.close()
 
 
-# ── Metrics summary (from eval_results.json) ─────────────────────────────────
+# ── Metrics summary ───────────────────────────────────────────────────────────
 st.markdown("---")
 st.subheader("📊 Experiment Results Summary")
 
@@ -332,37 +379,36 @@ if os.path.exists(EVAL_RESULTS):
     base_auc = results.get("baseline", {}).get("macro_auc", None)
     var_iou  = results.get("variant",  {}).get("localization", {}).get("mean_iou", None)
     gcam_iou = results.get("gradcam_loc", {}).get("mean_iou", None)
-    var_pg   = results.get("variant",  {}).get("localization", {}).get("pointing_game_acc", None)
-    gcam_pg  = results.get("gradcam_loc", {}).get("pointing_game_acc", None)
 
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Variant macro AUC",  f"{var_auc:.4f}"  if var_auc  else "—",
+    m1.metric("Variant macro AUC",   f"{var_auc:.4f}"  if var_auc  else "—",
               delta=f"{var_auc - base_auc:+.4f}" if (var_auc and base_auc) else None)
-    m2.metric("Baseline macro AUC", f"{base_auc:.4f}" if base_auc else "—")
+    m2.metric("Baseline macro AUC",  f"{base_auc:.4f}" if base_auc else "—")
     m3.metric("Supervised attn IoU", f"{var_iou:.4f}"  if var_iou  else "—",
               delta=f"{var_iou - gcam_iou:+.4f}" if (var_iou and gcam_iou) else None)
     m4.metric("Grad-CAM IoU",        f"{gcam_iou:.4f}" if gcam_iou else "—")
 
-    # Per-class AUC table
     with st.expander("Per-class AUC"):
         import pandas as pd
         var_cls  = results.get("variant",  {}).get("per_class_auc", {})
         base_cls = results.get("baseline", {}).get("per_class_auc", {})
-        rows = []
-        for cls in CLASS_NAMES:
-            rows.append({
+        rows = [
+            {
                 "Class":    cls,
                 "Variant":  round(var_cls.get(cls, float("nan")), 4),
                 "Baseline": round(base_cls.get(cls, float("nan")), 4),
                 "Delta":    round(var_cls.get(cls, 0) - base_cls.get(cls, 0), 4)
                             if cls in var_cls and cls in base_cls else float("nan"),
-            })
+            }
+            for cls in CLASS_NAMES
+        ]
         df = pd.DataFrame(rows)
-        st.dataframe(df.style.background_gradient(subset=["Variant", "Baseline"],
-                                                    cmap="RdYlGn", vmin=0.4, vmax=1.0),
-                     use_container_width=True)
+        st.dataframe(
+            df.style.background_gradient(subset=["Variant", "Baseline"],
+                                         cmap="RdYlGn", vmin=0.4, vmax=1.0),
+            use_container_width=True,
+        )
 
-    # Saved figures
     fig_files = [f for f in os.listdir(FIGURES_DIR) if f.endswith(".png")] \
                 if os.path.exists(FIGURES_DIR) else []
     if fig_files:
@@ -373,10 +419,8 @@ if os.path.exists(EVAL_RESULTS):
                                    caption=fname, use_column_width=True)
 else:
     st.info(
-        "No evaluation results yet. Run training on Kaggle first, then run:\n\n"
-        "```\npython -m src.evaluate "
-        "--variant_ckpt outputs/checkpoints/resnet50_attention_best.pt "
-        "--baseline_ckpt outputs/checkpoints/resnet50_baseline_best.pt\n```"
+        "No evaluation results file found (`outputs/logs/eval_results.json`). "
+        "Run evaluation after training to populate this section."
     )
 
 # ── Footer ────────────────────────────────────────────────────────────────────
