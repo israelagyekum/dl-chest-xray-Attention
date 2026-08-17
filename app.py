@@ -422,7 +422,7 @@ if os.path.exists(EVAL_RESULTS):
             cols = st.columns(2)
             for i, fname in enumerate(sorted(fig_files)):
                 cols[i % 2].image(os.path.join(FIGURES_DIR, fname),
-                                   caption=fname, use_column_width=True)
+                                   caption=fname, use_container_width=True)
 else:
     st.info(
         "No evaluation results file found (`outputs/logs/eval_results.json`). "
