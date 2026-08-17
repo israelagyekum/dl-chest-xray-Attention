@@ -117,6 +117,42 @@ st.set_page_config(
     layout="wide",
 )
 
+# ── Custom styling (card-style metrics/expanders, matching brand palette) ─────
+st.markdown(
+    """
+    <style>
+    div[data-testid="stMetric"] {
+        background-color: #FFFFFF;
+        border-radius: 14px;
+        padding: 14px 18px;
+        box-shadow: 0 1px 3px rgba(26, 26, 46, 0.08);
+    }
+    div[data-testid="stMetric"] label { color: #6E7180 !important; }
+    div[data-testid="stExpander"] {
+        background-color: #FFFFFF;
+        border-radius: 14px;
+        border: 1px solid #E5E8F0;
+    }
+    div[data-testid="stFileUploader"], div[data-testid="stDataFrame"] {
+        border-radius: 14px;
+        overflow: hidden;
+    }
+    .stButton > button, .stDownloadButton > button {
+        border-radius: 10px;
+        background-color: #1A1A2E;
+        color: #FFFFFF;
+        border: none;
+    }
+    .stButton > button:hover, .stDownloadButton > button:hover {
+        background-color: #6C5CE7;
+        color: #FFFFFF;
+    }
+    section[data-testid="stSidebar"] { background-color: #FFFFFF; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # Download checkpoints on startup
 ensure_checkpoints()
 
@@ -305,12 +341,12 @@ if pil_img is not None:
     st.subheader("Visualisation")
 
     fig, axes = plt.subplots(1, 4, figsize=(18, 4.5))
-    fig.patch.set_facecolor("#0e1117")
+    fig.patch.set_facecolor("#FFFFFF")
     for ax in axes:
-        ax.set_facecolor("#0e1117")
+        ax.set_facecolor("#FFFFFF")
 
     axes[0].imshow(img_224)
-    axes[0].set_title("Input X-ray", color="white", fontsize=11, fontweight="bold")
+    axes[0].set_title("Input X-ray", color="#1A1A2E", fontsize=11, fontweight="bold")
     axes[0].axis("off")
 
     if has_box:
@@ -319,8 +355,8 @@ if pil_img is not None:
         axes[1].imshow(img_224)
         axes[1].text(112, 112, "No GT box\nfor this image",
                      ha="center", va="center", color="white", fontsize=10,
-                     bbox=dict(boxstyle="round", fc="#333", ec="none"))
-        axes[1].set_title("Ground-truth box", color="white", fontsize=11)
+                     bbox=dict(boxstyle="round", fc="#6C5CE7", ec="none"))
+        axes[1].set_title("Ground-truth box", color="#1A1A2E", fontsize=11)
         axes[1].axis("off")
 
     overlay_heatmap(axes[2], img_224, attn_up, alpha=alpha,
@@ -329,7 +365,7 @@ if pil_img is not None:
                     title="Grad-CAM (baseline)")
 
     for ax in axes:
-        ax.title.set_color("white")
+        ax.title.set_color("#1A1A2E")
 
     plt.tight_layout(pad=0.5)
     st.pyplot(fig, use_container_width=True)
