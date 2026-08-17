@@ -226,7 +226,10 @@ with st.sidebar:
     alpha  = st.slider("Heatmap opacity",       0.2, 0.8, 0.45, 0.05)
 
     st.markdown("---")
-    st.caption("**Explanation-Supervised Attention**\nCSCD 618 / DSCD 604\nIsrael Agyekum")
+    st.caption(
+        "**Explanation-Supervised Attention**\nCSCD 618 / DSCD 604\n"
+        "Israel Agyekum · Joel Dadi-Klutse · Eric Okyere"
+    )
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -433,5 +436,5 @@ else:
 st.markdown("---")
 st.caption(
     "**Explanation-Supervised Attention for Multi-Label Thoracic Disease Classification** "
-    "| CSCD 618 / DSCD 604 | Israel Agyekum"
+    "| CSCD 618 / DSCD 604 | Israel Agyekum · Joel Dadi-Klutse · Eric Okyere"
 )
