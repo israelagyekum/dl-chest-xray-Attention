@@ -244,7 +244,7 @@ def render_gt_box(ax, img_np, gt_mask_7x7, title="Ground-truth box"):
 
 @st.cache_data(show_spinner=False)
 def _load_logo_b64() -> str:
-    logo_path = os.path.join(ROOT, "assets", "sidebar_logo.png")
+    logo_path = os.path.join(ROOT, "sidebar_logo.png")
     if not os.path.exists(logo_path):
         return ""
     import base64
