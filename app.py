@@ -242,11 +242,50 @@ def render_gt_box(ax, img_np, gt_mask_7x7, title="Ground-truth box"):
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
+@st.cache_data(show_spinner=False)
+def _load_logo_b64() -> str:
+    logo_path = os.path.join(ROOT, "assets", "sidebar_logo.png")
+    if not os.path.exists(logo_path):
+        return ""
+    import base64
+    with open(logo_path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
 with st.sidebar:
-    st.image(
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/NIH_logo.svg/200px-NIH_logo.svg.png",
-        width=80,
-    )
+    _logo_b64 = _load_logo_b64()
+    if _logo_b64:
+        st.markdown(
+            f"""
+            <style>
+            @keyframes spin-logo {{
+                from {{ transform: rotate(0deg); }}
+                to   {{ transform: rotate(360deg); }}
+            }}
+            .spinning-logo-wrap {{
+                display: flex;
+                justify-content: center;
+                margin: 4px 0 10px 0;
+            }}
+            .spinning-logo {{
+                width: 92px;
+                height: 92px;
+                border-radius: 50%;
+                animation: spin-logo 9s linear infinite;
+                box-shadow: 0 4px 14px rgba(240, 105, 60, 0.25);
+            }}
+            </style>
+            <div class="spinning-logo-wrap">
+                <img class="spinning-logo" src="data:image/png;base64,{_logo_b64}">
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.image(
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/NIH_logo.svg/200px-NIH_logo.svg.png",
+            width=80,
+        )
     st.title("Settings")
 
     backbone_label = st.selectbox("Backbone", list(BACKBONE_OPTIONS.keys()), index=0)
